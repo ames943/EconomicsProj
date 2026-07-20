@@ -35,6 +35,28 @@ does not remove any row from the output CSV)
   amplifies ordinary price-quote noise into large yield swings) -- see
   the S-1650 1847-48 tail finding in PROJECT_CONTEXT.md. Flagged for
   exclusion from primary trend lines; value retained for transparency.
+
+Active-default override (takes priority over the truncation rule above)
+------------------------------------------------------------------------
+YTM assumes the bond redeems at full face value on schedule. That
+assumption is unsound for an issuer already known to be missing
+scheduled redemptions -- not just close to one bond's own maturity, but
+for the whole stretch it is in default. For any observation whose date
+falls inside DEFAULT_PERIODS[state], current yield is used instead of
+YTM regardless of years-to-maturity, and the near/past-maturity
+exclusion flags do not apply (they exist specifically to guard YTM's
+maturity-proximity math, which is moot once YTM isn't being used).
+See PROJECT_CONTEXT.md for the S-2410 finding that surfaced this and
+source citations for the default/resumption dates below.
+
+Alabama is deliberately NOT in DEFAULT_PERIODS: per Wallis and other
+secondary sources, Alabama raised taxes and liquidated its state bank to
+keep meeting its debt service, and did not default in this episode
+despite being under similar pressure. Its current-yield treatment is
+justified solely by missing codebook maturity data (see NO_MATURITY_
+STATES), not by default status. The bucket label "defaulted" used for
+Alabama throughout this project should be revisited -- see
+PROJECT_CONTEXT.md.
 """
 
 import re
@@ -63,6 +85,20 @@ STATE_BUCKET = {
 # (Alabama: blank; Indiana: "25 years" term length, no issue date to anchor
 # it) -- these states always use current yield, never YTM.
 NO_MATURITY_STATES = {"Alabama", "Indiana"}
+
+# Active-default windows: (start, end). end=None means "still in default
+# through the end of this state's usable data" (no clean resumption date
+# found within the analysis window). Sources: suspension/resumption dates
+# corroborated via Wallis (2004/2005) and secondary summaries of the 1840s
+# state-default episode (see PROJECT_CONTEXT.md for citations and caveats
+# -- these rest on web-search-summarized secondary sources, not a primary-
+# document read, same caveat level as the no-bailout anchor date).
+# Alabama is intentionally absent: per those same sources, Alabama did not
+# default in this episode.
+DEFAULT_PERIODS = {
+    "Pennsylvania": (pd.Timestamp("1842-08-01"), pd.Timestamp("1845-02-01")),
+    "Indiana": (pd.Timestamp("1841-01-01"), None),
+}
 
 BOND_SPECS = [
     {"code": "S-2240", "state": "Pennsylvania", "source": "pa"},
@@ -110,10 +146,22 @@ def compute_ytm(price: pd.Series, coupon: float, n_years: pd.Series) -> pd.Serie
     return (coupon + (FACE_VALUE - price) / n_years) / ((FACE_VALUE + price) / 2) * 100
 
 
-def build_bond_frame(spec: dict, price: pd.Series, coupon: float, mat_year: Optional[int]) -> pd.DataFrame:
-    current_yield = coupon / price * 100
+def in_default_period(state: str, dates: pd.DatetimeIndex) -> pd.Series:
+    if state not in DEFAULT_PERIODS:
+        return pd.Series(False, index=dates)
+    start, end = DEFAULT_PERIODS[state]
+    mask = dates >= start
+    if end is not None:
+        mask &= dates < end
+    return pd.Series(mask, index=dates)
 
-    if spec["state"] in NO_MATURITY_STATES or mat_year is None:
+
+def build_bond_frame(spec: dict, price: pd.Series, coupon: float, mat_year: Optional[int]) -> pd.DataFrame:
+    state = spec["state"]
+    current_yield = coupon / price * 100
+    default_override = in_default_period(state, price.index)
+
+    if state in NO_MATURITY_STATES or mat_year is None:
         yield_measure = pd.Series("current_yield", index=price.index)
         yield_value = current_yield
         excluded_near = pd.Series(False, index=price.index)
@@ -129,20 +177,31 @@ def build_bond_frame(spec: dict, price: pd.Series, coupon: float, mat_year: Opti
         yield_measure = pd.Series("ytm", index=price.index)
         yield_measure = yield_measure.mask(excluded_past, pd.NA)
 
+        # Active-default override takes priority: YTM's par-redemption
+        # assumption doesn't hold for an issuer already missing scheduled
+        # redemptions, regardless of years-to-maturity. Un-excludes rows
+        # that were near/past-maturity flagged too, since that flag exists
+        # only to guard YTM math that no longer applies here.
+        yield_value = yield_value.where(~default_override, current_yield)
+        yield_measure = yield_measure.mask(default_override, "current_yield")
+        excluded_near = excluded_near & ~default_override
+        excluded_past = excluded_past & ~default_override
+
     return pd.DataFrame(
         {
             "date": price.index,
-            "state": spec["state"],
+            "state": state,
             "code": spec["code"],
             "price": price.values,
             "coupon": coupon,
             "yield_measure_used": yield_measure.values,
             "yield": yield_value.values,
             "current_yield": current_yield.values,
-            "bucket": STATE_BUCKET[spec["state"]],
+            "bucket": STATE_BUCKET[state],
             "series_label": "primary",
             "excluded_near_maturity": pd.Series(excluded_near).values,
             "excluded_past_maturity": pd.Series(excluded_past).values,
+            "active_default_override": default_override.values,
         }
     )
 
