@@ -304,6 +304,108 @@ This is cleaner than carrying a labeled covariate through every chart.
 - English (1996), AER - 1840s defaults as sovereign default cost test case
 - Kim & Wallis (2005), Economic History Review - transatlantic bond market
 
+## NY General-Obligation Coverage Check (third advisor-cycle work, post S-1320/1370/1560 pick)
+
+**S-1320/S-1370/S-1560 (the maturity-matched GO codes adopted in the
+seniority-check decision above) are unusable: zero observations in
+1839-1843**, the exact window the analysis depends on most. All three
+don't start trading in this file until 1850 (S-1320 has one lone 1830
+point, then a 7,172-day gap to 1851). They were picked purely on
+name/maturity match against the canal series, without checking date
+coverage.
+
+**Replacement: S-1650 "New York 7s, 1849".** Scanned all 47 non-canal-
+tagged codes in the S-1140-S-1656 GO range for coverage; S-1650 is by far
+the best: 157 total obs, continuous 1842-07-02 to 1848-12-09 (one gap
+>90 days), 22 obs pre-signal (Jul 1842-Mar 1843) and 135 post-signal
+(Apr 1843-Dec 1848). This is now the **primary NY GO series**, replacing
+S-1320/S-1370/S-1560. Tradeoff: it doesn't reach the 1850s.
+
+**Splice to S-1370 for 1850s extension -- evaluated and REJECTED.**
+S-1650 (7% coupon, matures 1849) and S-1370 (5% coupon, matures 1860) are
+not the same underlying loan -- codebook has no issuance/authorizing-act
+data to connect them, and the coupon/maturity mismatch is itself evidence
+they're different instruments. Gap between S-1650's last obs (1848-12-09)
+and S-1370's first obs (1850-01-12) is 399 days (~13.1 months). Worse:
+S-1650 matures in 1849, so its own tail is inside a pull-to-par window
+(see below) -- splicing a near-maturity short bond into a long-duration
+bond would create an artificial kink at the seam that looks like a credit
+signal but isn't. **Decision: no continuous NY GO series past 1848. The
+1850s extension is dropped for NY**, not patched over.
+
+## Maturity-Proximity / Pull-to-Par Check (primary-comparison codes)
+
+Checked every primary code for price observations within 12 months of the
+bond's own stated maturity, and separately for observations trading past
+the bond's stated maturity date entirely (maturity convention: Jan 1 of
+the codebook's maturity year, since only a year is given).
+
+**Past-maturity trading (YTM undefined, more bonds than initially found):**
+Pennsylvania's S-2240 was flagged first (45 of 420 obs trade past its
+1841 nominal maturity, continuing through Sept 1842 -- PA's actual
+default month; the bond was never redeemed on schedule). Applying the
+same mechanical rule to every code turned up more: **S-2250 (PA, 115 of
+548 obs past its 1846 maturity), S-2100 (Ohio, 29 of 519 obs past its
+1850 maturity), S-2010 (Ohio, 3 of 167 obs past its 1850 maturity)**.
+None of these are data errors -- they reflect real non-redemption, itself
+a distress signal -- but YTM cannot be computed for them without a real
+redemption date the codebook doesn't give.
+
+**YTM vs. current yield in the near-maturity window -- tested on S-1650's
+1847-48 tail (31 of 157 obs, within 12 months of its 1849 maturity):**
+switching to YTM does not fix the pull-to-par distortion, it amplifies it.
+Pre-1847 YTM std = 0.587; 1847-48 tail YTM std = 2.852 (~5x noisier), and
+the final observation (Dec 9 1848, 23 days to maturity) produces YTM =
+-8.8%, a formula artifact (near-zero denominator), not a real reading.
+Current yield and YTM even *disagree on direction* in this tail (current
+yield: 6.641 -> 6.913, +0.27; YTM: 5.555 -> 5.144, -0.41) -- neither
+should be trusted uncritically this close to maturity.
+
+**Decision: truncate, don't patch.** YTM is primary wherever computable;
+current yield is retained as a diagnostic-only column. Two flags mark
+rows to exclude from primary trend analysis (rows are kept in the CSV,
+not deleted):
+- `excluded_past_maturity`: obs on/after the bond's own maturity date.
+  Yield is NOT computed (NaN) for these rows.
+- `excluded_near_maturity`: obs within 12 months before maturity. YTM is
+  still computed and stored (for transparency) but flagged as unreliable.
+
+**Resulting usable primary-trend date ranges** (after excluding both
+flag categories), from `scripts/calculate_yields.py`:
+
+| Code | State | Usable range | Note |
+|---|---|---|---|
+| S-2240 | Pennsylvania | 1831-07-23 to **1839-08-17** | Contributes nothing to the policy-window test (1841-1848) -- usable data ends entirely within the panic window |
+| S-2250 | Pennsylvania | 1831-07-23 to 1842-09-24 | Usable through PA's actual default, not past it -- no post-signal (post-Apr 1843) coverage |
+| S-2270 | Pennsylvania | 1831-07-23 to 1843-12-23 | Only PA bond with any post-signal coverage (~8 months past Apr 1843) |
+| S-2100 | Ohio | 1827-06-23 to 1843-10-21 | |
+| S-2110 | Ohio | 1840-09-30 to 1853-12-14 | |
+| S-2080 | Ohio | 1840-08-01 to 1853-12-14 | |
+| S-2010 | Ohio | 1827-06-23 to 1848-07-22 | |
+| S-0030 | Alabama | 1842-02-19 to 1853-06-18 | current yield only (no maturity data) |
+| S-0040 | Alabama | 1842-06-25 to 1851-05-21 | current yield only |
+| S-0510 | Indiana | 1843-01-21 to 1848-12-09 | current yield only (maturity is a 25yr term, not anchored) |
+| S-0540 | Indiana | 1843-01-21 to 1848-09-16 | current yield only |
+| S-1650 | New York (GO primary) | 1842-07-02 to **1848-01-01** | Primary NY series, see above |
+
+**Flag for the write-up / advisor conversation:** of PA's three bonds,
+only S-2270 has any usable post-April-1843 coverage, and only ~8 months
+of it. S-2240 in particular is dead weight for the actual policy-window
+test despite being PA's cleanest pre-default decline story -- it's useful
+for the panic-window robustness check, not the primary test.
+
+## calculate_yields.py (built)
+
+`scripts/calculate_yields.py` implements the above: YTM (Hastings
+approximation) for PA/Ohio/NY, current yield for Alabama/Indiana, both
+truncation flags, current yield always retained as a diagnostic column.
+Output: `output/primary_yields.csv` (3,441 rows) --
+`date, state, code, price, coupon, yield_measure_used, yield,
+current_yield, bucket, series_label, excluded_near_maturity,
+excluded_past_maturity`. `series_label` is `"primary"` for all rows;
+the canal/robustness comparison (S-1750/S-1820/S-1950 etc.) has not been
+built yet -- separate follow-up script.
+
 ## Advisor / meeting context
 - Advisor: Professor George Hall (Brandeis), co-advisor Thomas Sargent (NYU)
 - Goal: complete enough of the analysis to bring back concrete results/
