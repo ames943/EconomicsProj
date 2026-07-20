@@ -1,26 +1,63 @@
 """Narrow down which S- codes might correspond to which states, by behavior
-pattern rather than a codebook (none is available yet).
+pattern, cross-checked against the Securities Index.xls codebook.
 
-Does NOT assign state names. It only flags:
+It flags:
   - default-risk-shaped price drops (>25% within a 6-month window, 1837-1845)
   - Philadelphia columns matching PA's known ~80s -> 50s/60s decline into its
     August 1842 default
-  - New York columns that stayed flat or recovered quickly over the same
-    window, as candidates for bonds that avoided default
+  - New York columns (true "NY State Debt" sheet only -- New-York.xls also
+    has an "Other State Debt" sheet with non-NY bonds) that stayed flat or
+    recovered quickly over the same window, as candidates for bonds that
+    avoided default
+
+Each output row is enriched with the confirmed security name from
+Securities Index.xls where available.
 
 Output: output/candidate_state_codes.csv
 """
 
 from pathlib import Path
 
+import xlrd
 import pandas as pd
 
+RAW_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
 OUTPUT_DIR = Path(__file__).resolve().parent.parent / "output"
 
 SOURCE_FILES = {
     "New-York.xls": OUTPUT_DIR / "new_york_state_debt_prices.csv",
     "Philadelphia1.xls": OUTPUT_DIR / "philadelphia_state_debt_prices.csv",
 }
+
+CODEBOOK_PATH = RAW_DIR / "Securities Index.xls"
+
+# Manual notes for codes already confirmed to be mislabeled by the "New York
+# candidates" heuristic below -- these live in New-York.xls's "Other State
+# Debt" sheet, not "NY State Debt", so they are not New York bonds.
+KNOWN_BUCKET_NOTES = {
+    "S-2100": "Ohio -- safe candidate (never defaulted), not NY",
+    "S-2110": "Ohio -- safe candidate (never defaulted), not NY",
+    "S-2080": "Ohio -- safe candidate (never defaulted), not NY",
+    "S-2010": "Ohio -- safe candidate (never defaulted), not NY",
+    "S-0030": "Alabama -- likely defaulted candidate, not NY",
+    "S-0040": "Alabama -- likely defaulted candidate, not NY",
+    "S-0510": "Indiana -- likely defaulted candidate (1846 Butler Bill), not NY",
+    "S-0540": "Indiana -- likely defaulted candidate (1846 Butler Bill), not NY",
+}
+
+
+def load_codebook() -> dict:
+    """Code -> confirmed security name, from Securities Index.xls."""
+    if not CODEBOOK_PATH.exists():
+        return {}
+    wb = xlrd.open_workbook(CODEBOOK_PATH)
+    sh = wb.sheet_by_name("final")
+    return {row[0]: row[1] for row in (sh.row_values(r) for r in range(1, sh.nrows))}
+
+
+def bare_code(col: str) -> str:
+    """Strip a 'NY State Debt::' / 'Other State Debt::' sheet-source prefix."""
+    return col.split("::", 1)[-1]
 
 CRISIS_START = pd.Timestamp("1837-01-01")
 CRISIS_END = pd.Timestamp("1845-12-31")
@@ -103,6 +140,7 @@ def recovers_quickly(s: pd.Series, trough_date, peak_price) -> bool:
 
 def main():
     all_rows = []
+    codebook = load_codebook()
 
     for source_file, csv_path in SOURCE_FILES.items():
         if not csv_path.exists():
@@ -164,10 +202,15 @@ def main():
                     print(f"    {d.date()}  {v:.2f}")
 
         # --- 4. New York: flat / quick-recovery candidates ---
+        # Restricted to the real "NY State Debt" sheet only -- New-York.xls
+        # also contains an "Other State Debt" sheet (Ohio, Alabama, Indiana,
+        # etc. bonds quoted on the NY market), which are not New York bonds
+        # and must not be mistaken for "survived" NY candidates.
         if source_file == "New-York.xls":
-            print("\n-- Candidates that stayed flat or recovered quickly (1837-1845), possible non-default NY bonds --")
+            print("\n-- Candidates that stayed flat or recovered quickly (1837-1845), true NY State Debt sheet only --")
+            ny_cols = [c for c in df.columns if c.startswith("NY State Debt::")]
             ny_candidates = []
-            for col in df.columns:
+            for col in ny_cols:
                 s = df[col].dropna()
                 window = s[(s.index >= CRISIS_START) & (s.index <= CRISIS_END)]
                 if len(window) < 3:
@@ -186,10 +229,13 @@ def main():
         # --- accumulate rows for final CSV ---
         for col in df.columns:
             summ = summaries[col]
+            code = bare_code(col)
             all_rows.append(
                 {
                     "code": col,
                     "source_file": source_file,
+                    "confirmed_name": codebook.get(code, ""),
+                    "bucket_note": KNOWN_BUCKET_NOTES.get(code, ""),
                     "avg_price": round(summ["avg_price"], 2) if pd.notna(summ["avg_price"]) else "",
                     "volatility": round(summ["volatility"], 2) if pd.notna(summ["volatility"]) else "",
                     "pct_populated": round(summ["pct_populated"], 2),

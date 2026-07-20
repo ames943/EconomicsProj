@@ -65,6 +65,13 @@ def parse_file(xls_path: Path) -> pd.DataFrame:
     wb = xlrd.open_workbook(xls_path)
     sheet_names = find_state_debt_sheets(wb)
 
+    # When a file splits state debt across multiple sheets (e.g. New-York.xls
+    # has "NY State Debt" and "Other State Debt"), a bare "S-" code is
+    # ambiguous -- the same code can denote different securities in different
+    # sheets/files. Tag each column with its source sheet before concatenating
+    # so downstream scripts can filter to a specific sheet's real columns.
+    tag_columns = len(sheet_names) > 1
+
     frames = []
     date_col = None
     for sheet_name in sheet_names:
@@ -73,7 +80,10 @@ def parse_file(xls_path: Path) -> pd.DataFrame:
         if date_col is None:
             date_col = df[first_col]
         state_cols = [c for c in df.columns if is_state_debt_column(c)]
-        frames.append(df[state_cols])
+        sheet_df = df[state_cols]
+        if tag_columns:
+            sheet_df = sheet_df.rename(columns={c: f"{sheet_name}::{c}" for c in state_cols})
+        frames.append(sheet_df)
 
     combined = pd.concat(frames, axis=1)
     combined.insert(0, "date", excel_year_monthday_to_datetime(date_col))
