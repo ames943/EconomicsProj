@@ -68,6 +68,8 @@ BOND_SPECS = [
     {"code": "S-2240", "state": "Pennsylvania", "source": "pa"},
     {"code": "S-2250", "state": "Pennsylvania", "source": "pa"},
     {"code": "S-2270", "state": "Pennsylvania", "source": "pa"},
+    {"code": "S-2330", "state": "Pennsylvania", "source": "pa"},
+    {"code": "S-2410", "state": "Pennsylvania", "source": "pa"},
     {"code": "S-2100", "state": "Ohio", "source": "ny_other"},
     {"code": "S-2110", "state": "Ohio", "source": "ny_other"},
     {"code": "S-2080", "state": "Ohio", "source": "ny_other"},
