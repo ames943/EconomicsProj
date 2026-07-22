@@ -76,7 +76,13 @@ NEAR_MATURITY_YEARS = 1.0
 STATE_BUCKET = {
     "Pennsylvania": "defaulted",
     "Ohio": "safe",
-    "Alabama": "defaulted",
+    # Reclassified from "defaulted": Alabama raised direct taxation (early
+    # 1842) and used state-bank liquidation proceeds to keep meeting debt
+    # service -- it did not default in this episode (see PROJECT_CONTEXT.md,
+    # Active-Default YTM Override section). Its current-yield treatment is
+    # unaffected -- that's justified by missing codebook maturity data, a
+    # separate reason. PENDING ADVISOR CONFIRMATION.
+    "Alabama": "risky_but_survived",
     "Indiana": "defaulted",
     "New York": "risky_but_survived",
 }

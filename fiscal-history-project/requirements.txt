@@ -2,3 +2,4 @@ pandas
 xlrd
 matplotlib
 openpyxl
+python-docx

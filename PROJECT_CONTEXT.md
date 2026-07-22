@@ -406,6 +406,191 @@ excluded_past_maturity`. `series_label` is `"primary"` for all rows;
 the canal/robustness comparison (S-1750/S-1820/S-1950 etc.) has not been
 built yet -- separate follow-up script.
 
+## Active-Default YTM Override (post-chart-review finding)
+
+While reviewing the three-tier chart set (see below), Pennsylvania's line
+spiked to 30-40% YTM. Traced to two distinct sources, only one of which
+is legitimate:
+
+- **S-2250 (Jan-Sep 1842):** prices fell 60->37, matching PA's documented
+  pre-default collapse. Years-to-maturity was 4-4.7 (not a proximity
+  issue). Largely legitimate, EXCEPT the last ~7 obs (Aug 13-Sep 24 1842)
+  fall after PA's actual Aug 1 1842 default -- see override below.
+- **S-2410 (Dec 1842-Dec 1844):** YTM averaged 30% (vs. ~9.5% current
+  yield for the same data) across its ENTIRE usable window (n_years =
+  1.0-3.0, outside the 12-month proximity rule). Root cause: YTM assumes
+  the bond redeems at full par on schedule. That assumption is unsound
+  for PA specifically, which was in active default this whole window and
+  had already demonstrated non-redemption (S-2240 traded 631 days past
+  its own unredeemed 1841 maturity, see Maturity-Proximity section
+  above). This is not a near-maturity noise problem -- it's YTM's core
+  assumption failing for a defaulted issuer, at any duration.
+
+**Rule adopted: for any observation date inside a state's active-default
+period, use current yield instead of YTM, regardless of years-to-
+maturity.** This takes priority over (and supersedes, for those rows)
+the near/past-maturity exclusion flags, which exist specifically to
+guard YTM's maturity-proximity math -- moot once YTM isn't being used.
+
+**Default periods (web-search-corroborated secondary sources -- same
+caveat level as the no-bailout anchor date: not verified against a
+primary document):**
+- **Pennsylvania: Aug 1, 1842 - Feb 1, 1845.** Suspended its Aug 1842
+  interest payment; resumed once 1845 property-tax revenue reached
+  $1.318M, with back interest paid. (Consistent with the existing "PA
+  Default (Aug 1842)" marker already used in scripts/plot_pa_default.py.)
+- **Indiana: Jan 1, 1841 - ongoing through this project's data window.**
+  Defaulted January 1841; the 1846-47 Butler Bill restructured the debt
+  (ceded the Wabash & Erie Canal to creditors for half; a payment plan
+  for the rest) but no clean "resumed normal payment" date was found
+  within the analysis window, so Indiana is treated as in default
+  through the end of its usable data (Dec 1848).
+- **Alabama: NO default period -- Alabama did not default in this
+  episode.** Multiple independent sources state Alabama raised direct
+  taxation (early 1842) and used state-bank liquidation proceeds to keep
+  meeting debt service, unlike PA/Indiana/Maryland/Illinois (temporary
+  defaulters) or LA/AR/MI/MS/Florida Territory (outright repudiators).
+
+**IMPORTANT -- open issue, not yet resolved:** Alabama has been carried
+in this project's "defaulted" bucket since the very first candidate
+scan (see Confirmed Results / Seniority Check sections above), used in
+every table, chart legend, and comparison so far. If Alabama genuinely
+did not default, that bucket label is wrong, and Alabama's current-yield
+treatment is justified *only* by missing codebook maturity data (see
+NO_MATURITY_STATES), not by a dual (missing-data + default)
+justification the way Indiana now has. This may mean Alabama belongs
+closer to New York's "risky but survived" bucket than to PA/Indiana's
+"defaulted" one -- a bucket reclassification, not just a yield-formula
+detail. NOT yet changed pending review; flagged here so it isn't lost.
+
+**Result after applying the override (221 genuine yield-measure changes,
+`scripts/calculate_yields.py`, re-run against `output/primary_yields.csv`):**
+
+| Code | Rows changed | Window | Old (YTM) | New (current yield) |
+|---|---|---|---|---|
+| S-2240 | 8 (newly un-excluded) | Aug-Sep 1842 | NaN (was past-maturity excluded) | 12.49% (10.4-13.5%) |
+| S-2250 | 7 | Aug-Sep 1842 | 33.47% (32.7-34.6%) | 12.79% (12.5-13.5%) |
+| S-2270 | 12 | Aug 1842-Dec 1843 | 16.35% (12.2-19.8%) | 10.57% (7.3-13.5%) |
+| S-2330 | 93 (~whole window) | Dec 1842-Dec 1844 | 9.64% (7.1-13.1%) | 8.74% (6.3-13.5%) -- modest change |
+| S-2410 | 101 (~whole window) | Dec 1842-Jan 1845 | 30.60% (17.4-43.4%) | 9.83% (7.1-14.6%) -- the big one |
+
+PA's post-default yields now cluster in the same 7-15% range as the rest
+of the "defaulted" bucket instead of one bond (S-2410) dragging the
+state average to 30-40%. `output/primary_yields.csv` now has a
+14th column, `active_default_override` (bool). A pre-override snapshot
+is saved at `output/primary_yields_before_default_override.csv` for
+comparison.
+
+**Stale artifact:** `output/pa_bridge_secondary.csv` (built in the prior
+task) still reflects pre-override S-2330/S-2410 values -- needs
+regenerating before it's used in any chart.
+
+**Charts NOT yet rebuilt** -- `output/chart_panic_window.png`,
+`chart_policy_short_medium.png`, `chart_policy_long_term.png` all still
+reflect the pre-override YTM numbers and need to be regenerated once
+this is reviewed.
+
+## Alabama Reclassification: Defaulted -> Risky But Survived
+
+Acted on the open issue flagged above. `STATE_BUCKET["Alabama"]` in
+`scripts/calculate_yields.py` changed from `"defaulted"` to
+`"risky_but_survived"`, with an inline comment marking it **pending
+advisor confirmation**. Alabama's current-yield treatment is unchanged
+(still justified solely by missing codebook maturity data -- unrelated
+to the bucket question). `output/primary_yields.csv`,
+`output/pa_bridge_secondary.csv`, and all three charts
+(`chart_panic_window.png`, `chart_policy_short_medium.png`,
+`chart_policy_long_term.png`) regenerated. Chart legends now show
+"Alabama (risky, survived*)" with a footnote explaining the
+reclassification; chart 3's title/subtitle updated since it's no longer
+a defaulted-vs-safe comparison (Ohio vs. Alabama is now safe vs.
+risky-but-survived). Fixed a footnote-wrapping bug in
+`build_yield_charts.py` (methodology note was being clipped at the
+figure's right edge) while rebuilding.
+
+### Finding: Alabama vs. Ohio, does it pattern as "in between"?
+
+| Year | Alabama | Ohio (safe) | Spread |
+|---|---|---|---|
+| 1843 | 7.36% | 7.15% | +0.21pp |
+| 1844 | 6.20% | 6.13% | +0.08pp |
+| 1845 | 7.11% | 6.31% | +0.81pp |
+| 1846 | 7.45% | 6.73% | +0.72pp |
+| 1847 | 8.22% | 6.22% | +2.00pp |
+| 1848 | 8.12% | 6.11% | +2.01pp |
+| 1850 | 6.21% | 4.83% | +1.38pp |
+| 1851-53 | ~5.5% | ~4.5% | ~+1.0pp |
+
+Alabama opens near-identical to Ohio right after the April 1843 signal,
+widens to a genuine ~2pp premium by 1847-48, then narrows but never
+fully closes through 1853. This is a clean "persistent but smaller than
+the defaulters" pattern -- a good fit for the "risky but survived, lands
+in between" bucket.
+
+**Unexpected finding: New York (S-1650) does not show much premium over
+Ohio at all.** NY's own yields (5.0-5.6% through 1847, only reaching 7.0%
+in its final observed year, 1848) sit at or below Ohio's for most of the
+overlap window. On this specific series, NY reads empirically closer to
+"always safe" than "risky but survived" -- the qualitative historical
+narrative (NY faced real railroad/bank-failure stress) isn't showing up
+as a sustained yield premium in S-1650's price data. **Alabama, now
+correctly classified, is arguably the cleaner empirical example of the
+"in-between" bucket than NY is.** Flag for advisor discussion: worth
+checking whether S-1650 is representative of NY's actual risk profile,
+or whether NY's stress genuinely didn't transmit to bond pricing the way
+Alabama's did.
+
+### Finding: does PA still show elevated post-signal yield after the S-2410 fix?
+
+Yes, but the magnitude changed by more than 6x:
+- **Before the active-default override:** PA mean 19.81% vs. Ohio mean
+  6.69% (Apr 1843-Dec 1844) -> **13.12pp spread**, dominated by the
+  S-2410 YTM artifact.
+- **After the override:** PA mean 8.77% (range 6.70-13.31%) vs. Ohio
+  mean 6.69% (range 5.62-11.06%) -> **2.08pp spread**.
+
+The persistence claim survives -- PA still shows a real, positive gap
+over Ohio in the short/medium term -- but the honest post-correction
+story is a modest ~2pp premium, not a dramatic ~13pp one. This is now
+roughly the same order of magnitude as Alabama's peak premium (~2pp),
+suggesting PA and Alabama sit on the same "moderate default premium"
+curve rather than PA being a dramatic outlier. The dramatic-looking
+early version of this chart was an artifact of the YTM/default-period
+issue, not a real finding -- important to not cite the old 13pp number
+anywhere in the writeup.
+
+## Final Chart Captions + Meeting Prep Doc
+
+Added two footnotes not previously present: an `NY_DATA_NOTE` ("New York
+(S-1650) GO bond data begins Jul 1842; pre-1842 NY credit risk is not
+directly observable in this series") on chart 1 (panic-window) and
+chart 2 (policy-short/medium) -- the only two charts that include NY.
+Chart 3 doesn't include NY so doesn't need it. Confirmed chart 1 already
+carried the PA active-default-pricing note and chart 3 already carried
+the Alabama-reclassification-pending note via the shared `METHOD_NOTE`
+string -- no additional change needed there beyond what the Alabama
+reclassification task already added. All three charts rebuilt in
+`scripts/build_yield_charts.py`.
+
+Built `scripts/build_meeting_prep_doc.py` (new dependency: `python-docx`,
+added to `requirements.txt`) -- generates
+`output/meeting_prep_final.docx`: title, research-question recap tied to
+the Lustig "Blue Bonds" motivation, a "what's changed since last
+meeting" section leading with the three resolved open items + the two
+mid-session findings (active-default YTM fix, Alabama reclassification,
+PA's headline-number panic/policy distinction), the three-tier empirical
+results with embedded charts and full captions, a headline takeaway
+paragraph, a full word-for-word talking-points script, and the four open
+items for next phase (1850s extension ceiling, canal/robustness
+comparison not yet built, Indiana preferred/deferred tranche test not
+yet run, Feb 1843 anchor date still secondary-source-only). No prior
+meeting-prep doc existed in the repo to match style against, so the
+script was written in a direct, full-sentence style consistent with how
+this analysis was conducted. Saved to
+`fiscal-history-project/output/meeting_prep_final.docx` and copied to
+`~/Desktop/meeting_prep_final.docx` for sharing outside git (no
+`/mnt/user-data/outputs` equivalent exists on this machine).
+
 ## Advisor / meeting context
 - Advisor: Professor George Hall (Brandeis), co-advisor Thomas Sargent (NYU)
 - Goal: complete enough of the analysis to bring back concrete results/

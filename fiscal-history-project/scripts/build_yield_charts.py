@@ -20,6 +20,7 @@ magenta, Indiana yellow, New York aqua -- slots 1-5 of the validated
 default categorical palette, in that fixed order.
 """
 
+import textwrap
 from pathlib import Path
 
 import matplotlib.dates as mdates
@@ -46,10 +47,18 @@ STATE_COLOR = {
 STATE_BUCKET = {
     "Pennsylvania": "defaulted",
     "Ohio": "safe",
-    "Alabama": "defaulted",
+    "Alabama": "risky, survived*",
     "Indiana": "defaulted",
     "New York": "risky, survived",
 }
+ALABAMA_RECLASSIFICATION_NOTE = (
+    "* Alabama reclassified from \"defaulted\" to \"risky but survived\" -- pending advisor confirmation "
+    "(see PROJECT_CONTEXT.md)."
+)
+NY_DATA_NOTE = (
+    "New York (S-1650) GO bond data begins Jul 1842; pre-1842 NY credit risk is not directly observable "
+    "in this series (see PROJECT_CONTEXT.md)."
+)
 
 PANIC_START = pd.Timestamp("1835-01-01")
 PANIC_END = pd.Timestamp("1845-12-31")
@@ -127,10 +136,15 @@ def finish(fig, ax, title: str, methodology_note: str, out_name: str):
     ax.set_xlabel("Date", color=PRIMARY_TEXT, fontsize=11)
     ax.set_ylabel("Yield (%)", color=PRIMARY_TEXT, fontsize=11)
     ax.set_title(title, color=PRIMARY_TEXT, fontsize=13, fontweight="bold", loc="left")
-    fig.text(
-        0.01, 0.01, methodology_note, color=SECONDARY_TEXT, fontsize=8, ha="left", va="bottom"
-    )
-    fig.tight_layout(rect=(0, 0.035, 1, 1))
+
+    wrapped_lines = []
+    for paragraph in methodology_note.split("\n"):
+        wrapped_lines.extend(textwrap.wrap(paragraph, width=155) or [""])
+    wrapped = "\n".join(wrapped_lines)
+
+    fig.text(0.01, 0.01, wrapped, color=SECONDARY_TEXT, fontsize=8, ha="left", va="bottom")
+    bottom_margin = 0.02 + 0.018 * len(wrapped_lines)
+    fig.tight_layout(rect=(0, bottom_margin, 1, 1))
     out_path = OUTPUT_DIR / out_name
     fig.savefig(out_path, dpi=150, facecolor=SURFACE)
     plt.close(fig)
@@ -147,8 +161,9 @@ NY_CODES = ["S-1650"]
 
 METHOD_NOTE = (
     "Yield = mean across each state's usable primary bonds per date. YTM (approx.) for Pennsylvania/Ohio/New York; "
-    "current yield for Alabama/Indiana (no usable maturity data -- see PROJECT_CONTEXT.md). "
-    "Near- and past-maturity observations excluded throughout."
+    "current yield for Alabama/Indiana (no usable maturity data) and for any state during its own active-default "
+    "period (PA Aug 1842-Feb 1845, Indiana from Jan 1841) -- see PROJECT_CONTEXT.md.\n"
+    + ALABAMA_RECLASSIFICATION_NOTE
 )
 
 
@@ -167,7 +182,7 @@ def build_chart_1(df: pd.DataFrame):
     finish(
         fig, ax,
         "Panic-Window Yields, 1835–1845 — All 5 States",
-        METHOD_NOTE + " Window: panic/default shock (1835-1845), not the policy signal.",
+        METHOD_NOTE + " Window: panic/default shock (1835-1845), not the policy signal.\n" + NY_DATA_NOTE,
         "chart_panic_window.png",
     )
 
@@ -188,7 +203,8 @@ def build_chart_2(df: pd.DataFrame):
     finish(
         fig, ax,
         "Policy-Window Yields, Short/Medium-Term — Each State to Its Own Coverage Ceiling",
-        METHOD_NOTE + " Lines end where each state's usable data ends -- not a shared cutoff; see per-line labels.",
+        METHOD_NOTE + " Lines end where each state's usable data ends -- not a shared cutoff; see per-line labels.\n"
+        + NY_DATA_NOTE,
         "chart_policy_short_medium.png",
     )
 
@@ -201,10 +217,11 @@ def build_chart_3(df: pd.DataFrame):
     add_signal_line(ax, POLICY_SIGNAL, "No-bailout signal\n(Apr 1843)")
     finish(
         fig, ax,
-        "Policy-Window Yields, Long-Term — Ohio vs. Alabama Only (through the 1850s)",
+        "Policy-Window Yields, Long-Term — Ohio (safe) vs. Alabama (risky, survived*) Only, through the 1850s",
         METHOD_NOTE + " Restricted to Ohio (S-2110/S-2080) and Alabama (S-0030) -- the only two series with "
         "genuine decade-long density. Pennsylvania, Indiana, and New York cannot support this window with "
-        "current data.",
+        "current data. NOTE: with Alabama reclassified, this chart no longer compares defaulted vs. safe -- "
+        "it now tests whether a risky-but-survived state's yield converges toward the safe state's over time.",
         "chart_policy_long_term.png",
     )
 
