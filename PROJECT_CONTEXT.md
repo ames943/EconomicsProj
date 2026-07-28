@@ -591,9 +591,404 @@ this analysis was conducted. Saved to
 `~/Desktop/meeting_prep_final.docx` for sharing outside git (no
 `/mnt/user-data/outputs` equivalent exists on this machine).
 
+## PA Full Bond Re-Scan (34 codes, not just the original 3)
+
+The original 3 PA codes (S-2240/S-2250/S-2270) were a heuristic pick from
+the first codebook pass, not the full universe. The codebook actually has
+34 PA "State Bond" codes; 27 have price data in Philadelphia1.xls.
+
+Re-scanning all 27 for real post-signal (post-April-1843) coverage turned
+up two previously-unused bonds that are now part of PA's primary series:
+**S-2330 "Pennsylvania 5s, r. 1859"** (93 obs, Dec 1842-Dec 1844, no gaps
+>90 days) and **S-2410 "Pennsylvania 6s, r. 1846"** (177 obs total, usable
+window Dec 1842-Jan 1845, no gaps >90 days). Both give native continuous
+coverage spanning the April 1843 signal date -- no splice needed -- and
+replace S-2270's previous 5 observations / ~1.6 months as PA's only
+post-signal data point. `scripts/calculate_yields.py`'s `BOND_SPECS` list
+already reflects this (S-2240/S-2250/S-2270/S-2330/S-2410), it just was
+never written up here.
+
+**S-2460 bridge (secondary/extended view only, in `scripts/pa_bridge_secondary.py`,
+NOT part of the primary series):** "Pennsylvania new annual 5s" starts 7
+days after S-2330 ends (Dec 14 1844) and runs clean to Jan 1847, same 5%
+coupon as S-2330 (no coupon mismatch). But it's a differently-named
+instrument ("new annual" vs. S-2330/S-2410's dated fixed-maturity form) --
+the same category of judgment call as the rejected NY S-1650/S-1370
+splice below, just with a much smaller gap (7 days vs. 399) and no coupon
+mismatch. Treated the same way: kept as a labeled secondary/extended
+chart segment (distinct series, gap marked), not folded into PA's primary
+persistence line. `pa_bridge_secondary.py` also confirms S-2410 and
+S-2460 actually *overlap* by some days -- corroborating they're
+independently-traded distinct instruments, not a continuation of the same
+loan.
+
+What didn't help, scanned and rejected: S-2260, S-2420, S-2430 (isolated
+Feb-Dec 1850 chunks only, same trap as the original bad NY GO codes);
+S-2400, S-2450 (almost entirely consumed by their own near/past-maturity
+exclusion).
+
+## Coverage Ceiling / Panic-Window vs. Policy-Window Coverage Check (ALL primary bonds)
+
+Recomputed directly from `output/primary_yields.csv` (rows surviving the
+near/past-maturity exclusion), counting observations before Feb 11 1843
+(pre-signal) vs. on/after Apr 1 1843 (post-signal):
+
+| State | Code | Pre-signal | Post-signal | Post-signal span (mo) | Latest usable obs |
+|---|---|---|---|---|---|
+| PA | S-2240 | 348 | 0 | -- | 1842-09-24 |
+| PA | S-2250 | 433 | 0 | -- | 1842-09-24 |
+| PA | S-2270 | 442 | 5 | 1.6 | 1843-12-23 |
+| PA | S-2330 | 5 | 81 | 20.2 | 1844-12-07 |
+| PA | S-2410 | 6 | 88 | 21.8 | 1845-01-25 |
+| Ohio | S-2100 | 464 | 21 | 6.7 | 1843-10-21 |
+| Ohio | S-2110 | 45 | 116 | 128.0 | 1853-12-14 |
+| Ohio | S-2080 | 75 | 423 | 128.4 | 1853-12-14 |
+| Ohio | S-2010 | 159 | 5 | 60.7 (sparse) | 1848-07-22 |
+| Alabama | S-0030 | 18 | 140 | 122.3 | 1853-06-18 |
+| Alabama | S-0040 | 10 | 9 | 97.4 (sparse) | 1851-05-21 |
+| Indiana | S-0510 | 3 | 187 | 68.1 | 1848-12-09 |
+| Indiana | S-0540 | 3 | 134 | 65.3 | 1848-09-16 |
+| NY | S-1650 | 17 | 117 | 57.0 | 1848-01-01 |
+
+**Bottom line:** full-1850s persistence coverage (dense, trustworthy) only
+exists for Ohio (S-2110/S-2080) and Alabama (S-0030). PA (with
+S-2330/S-2410 added) supports persistence only to ~Dec 1844/Jan 1845.
+Indiana and NY both cap around late 1848. S-2010 (Ohio) and S-0040
+(Alabama) technically span long periods but are too sparse (5-9 obs over
+5-8 years, post-signal) to trust alone -- see the trade-density
+investigation below, which digs into *why* these two are sparse.
+
+## NY Price Investigation -- Why No Measurable Premium? (coverage artifact + genuine partial finding)
+
+Checked S-1650's raw PRICE data directly: it never dips below 99.50 across
+its entire observed history (Jul 1842-Dec 1848, 157 obs) -- trades at or
+above par the whole time (mean 104.63). Compared to the canal bonds
+(S-1750/S-1820/S-1950) over the identical window: those genuinely dip to
+78-89 (mean 88.6-101.7).
+
+**Catch:** S-1650 has zero price data before Jul 2, 1842 -- and the canal
+bonds' actual troughs (73.5-76) happened *before* that date, entirely
+outside S-1650's observed window. S-1650 was never quoted during the
+worst of NY's 1839-42 stress, so we cannot know whether the GO bond also
+dipped then. **This is primarily a data-coverage artifact, not a clean
+"NY was safe" finding.**
+
+Restricting to the identical window S-1650 covers (Jul 1842 onward), a
+genuine (if confounded) gap remains: S-1650 never drops below 99.50 even
+in the shared window, while all three canal bonds do (73.5-89 min).
+Caveat: canal bonds carry toll-revenue risk specific to canal traffic,
+distinct from NY's general state creditworthiness -- so this residual gap
+may reflect canal-specific revenue risk, not clean evidence about NY's
+overall credit. Does not fully rescue "NY is risky but survived" as a
+state-level claim.
+
+## Final Three-Tier Chart Structure (built, `output/` directory)
+
+1. **`chart_panic_window.png`** -- all 5 states/buckets, pre-1843, full
+   panic collapse-and-recovery story.
+2. **`chart_policy_short_medium.png`** -- PA (S-2330+S-2410, ~20-22mo),
+   Ohio, Alabama, Indiana, NY (S-1650) -- each truncated to its own real
+   coverage ceiling, NY footnoted with the coverage-gap caveat above.
+3. **`chart_policy_long_term.png`** -- Ohio (S-2110/S-2080) vs. Alabama
+   (S-0030) only -- the two states with genuine decade-long density; PA/
+   Indiana/NY explicitly labeled as not having comparable long-run data.
+
+`_clean` versions of all three (built via `scripts/export_charts_no_caption.py`)
+strip the footnote/methodology text for slide use; the captioned
+originals remain the source of record. `output/pa_bridge_secondary.csv`
+was regenerated to reflect post-active-default-override S-2330/S-2410
+values after that override was applied (was briefly stale, now fixed).
+`scripts/build_meeting_prep_doc.py` builds `output/meeting_prep_final.docx`
+embedding all three captioned charts plus a talking-points script, saved
+to the repo and copied to `~/Desktop/meeting_prep_final.docx` for sharing
+outside git.
+
+## Third Advisor Meeting (outcome)
+
+Presented all of the above (PA re-scan, coverage ceiling, NY price
+investigation, three-tier charts, Alabama reclassification). Three items
+came out of this meeting:
+
+1. **Alabama reclassification: NOT confirmed at the meeting.** Hall and
+   Sargent said they don't know / weren't sure whether Alabama genuinely
+   avoided default. STATUS: remains an open hypothesis -- keep the
+   "pending confirmation" label everywhere (already in
+   `scripts/calculate_yields.py`'s `STATE_BUCKET` comment and all three
+   chart footnotes), do not treat as locked in.
+
+   **Post-meeting follow-up (web search):** three independent sources now
+   corroborate the reclassification -- Wallis's "Sovereign Default and
+   Repudiation" work explicitly states Alabama "had banking problems" but
+   did NOT default; a Wikipedia list and a general secondary summary of
+   1840s defaulting states (Arkansas, Illinois, Indiana, Louisiana,
+   Maryland, Michigan, Mississippi, Pennsylvania, Florida Territory) both
+   exclude Alabama. This strengthens the case beyond what was presented at
+   the meeting, but the advisors have still not personally confirmed it --
+   treat as strengthened-but-still-open, not resolved.
+
+   **Open flag, not yet checked:** a separate source mentions Alabama
+   later paying bondholders roughly 30 cents on the dollar on
+   railroad-guaranteed bonds. Unclear if this refers to this 1840s episode
+   or a different/later one -- needs verification before being treated as
+   relevant (or dismissed). Still open as of this writing.
+
+2. **Traded vs. not-traded (bank-held) bonds -- new task, raised at this
+   meeting.** Advisors flagged that many states required state-chartered
+   banks to hold state bonds as backing for bank notes; a bond held this
+   way would show sparse/no market price data for reasons unrelated to
+   investor sentiment, which could distort the "market believed X"
+   analysis. Candidate bonds flagged at the meeting as already known to be
+   unusually sparse: Ohio's S-2010 (post-signal: 5 obs/60.7 months) and
+   Alabama's S-0040 (post-signal: 9 obs/97.4 months). Not investigated
+   at the time of the meeting -- see the dated investigation section
+   below for the follow-up.
+
+3. **New research question from advisors, not yet started:** does
+   punishment for state default spill over onto CITY-level bonds
+   (Philadelphia, New York City) that didn't themselves default, or did
+   the market distinguish city credit from state credit? Requires
+   checking whether `Securities Index.xls` / `Philadelphia1.xls` /
+   `New-York.xls` contain genuine city-issued (municipal) bond codes
+   distinct from the state bonds already in use -- NOT YET CHECKED
+   whether this data even exists in the current sources.
+
+**Note on this section:** this write-up (PA re-scan through this
+third-meeting outcome) was reconstructed from carried-over session
+context after being found missing from the version of this file
+committed to git -- the underlying scripts, output CSVs, and charts all
+independently confirm the work was actually done, but the documentation
+of it apparently never got saved/committed in the prior session. Treat
+the narrative above as accurate (spot-checked several of its numbers
+directly against `output/primary_yields.csv` and the raw price files
+while reconstructing it) but flag if anything here doesn't match your
+own recollection of the third meeting.
+
 ## Advisor / meeting context
 - Advisor: Professor George Hall (Brandeis), co-advisor Thomas Sargent (NYU)
 - Goal: complete enough of the analysis to bring back concrete results/
   progress for the next advisor meeting
 - This is an independent add-on project, separate from my assigned team
   work (Team Texas)
+
+## 2026-07-28: Trade-Density / Bank-Held Bonds Investigation
+
+Follow-up on Third-Meeting item 2 (traded vs. bank-held bonds). This was
+an investigative/flagging pass only -- **no existing output file
+(`primary_yields.csv`, `pa_bridge_secondary.csv`, or any chart) was
+changed.** New artifact: `output/trade_density.csv` (23 rows: all 14
+primary codes + 9 secondary/canal codes, computed ad hoc, not yet backed
+by a saved script -- see "not yet done" below).
+
+### Method
+
+For every code currently in the primary series (`calculate_yields.py`'s
+`BOND_SPECS`) plus every code in the not-yet-built canal/secondary series
+(NY S-1750/S-1820/S-1950, Ohio S-2190, Indiana's five Butler Bill canal
+tranches S-0470/S-0480/S-0490/S-0500/S-0506), pulled the raw price series
+directly from `philadelphia_state_debt_prices.csv` / `new_york_state_debt_prices.csv`
+(pre-truncation, i.e. before the near/past-maturity exclusion flags --
+deliberately, since the question here is "was this bond traded at all,"
+not "is this row usable for yield"), and computed total observations,
+first/last date, span in months, observations/month, and the single
+largest gap in days. Cross-checked totals against `primary_yields.csv`'s
+per-code row counts -- exact match on all 14 primary codes, confirming
+the raw pull is consistent with what `calculate_yields.py` already loads.
+
+### Flagged sparse bonds
+
+Confirmed the two already-known candidates, and found two more that
+hadn't been flagged before:
+
+| Code | State | Series | Obs/month | Largest gap | Verdict |
+|---|---|---|---|---|---|
+| S-0040 | Alabama | primary | 0.18 | 1,467 days (May 1847-May 1851) | Confirmed sparse (already known) |
+| S-2010 | Ohio | primary | 0.60 | 1,764 days (Sep 1843-Jul 1848) | Confirmed sparse (already known) |
+| **S-1750** | **New York** | **secondary/canal** | **0.36** | **1,666 days (Aug 1843-Feb 1848)** | **NEW flag -- nearly as sparse as S-0040** |
+| **S-2190** | **Ohio** | **secondary/canal** | **8.7*** | **7 days (both obs Oct 1825)** | **NEW flag -- only 2 total observations, both from 1825, none in the 1840s-50s at all** |
+| S-2110 | Ohio | primary | 1.04 | 2,289 days (Sep 1843-Jan 1850) | Lower-tier flag: sparser than sibling S-2080 (3.14/mo) by ~3x, though not as extreme as the two above |
+
+*S-2190's obs/month figure is an artifact of its 7-day total span (2 obs /
+0.2 months) and is meaningless on its own -- the real finding is that it
+has no data whatsoever in the 1840s-50s study window. This directly
+matters for the still-unbuilt canal/robustness script: S-2190 was the
+only candidate Ohio canal bond, and **it cannot be used for this project
+at all**, regardless of the bank-held question -- there's no data to
+plot. Flagging this explicitly as a proposal, not acting on it: **Ohio
+should be dropped from the canal/robustness comparison entirely** (it has
+no other revenue-pledged bond -- see Seniority Check above), rather than
+represented by 2 data points from a decade before the panic.
+
+Also notable: three of Ohio's four *primary* codes (S-2010, S-2100,
+S-2110) show a similarly-timed multi-year quiet stretch starting
+Sep-Oct 1843, while the fourth (S-2080, "Ohio 6s, 1860") stays
+continuously quoted through the same years. This pattern -- one issue
+staying liquid while its same-state siblings go quiet -- looks more like
+quoting activity concentrating onto a single benchmark issue than a
+uniform bank-absorption effect across all of a state's debt (see
+research below on why the timing doesn't fit a bank-holding story for
+Ohio specifically).
+
+### Web research: did state law require banks to hold state bonds as note-issue backing?
+
+Findings vary sharply by state -- this is genuinely NOT a uniform 1840s
+practice, contrary to the implicit assumption in "many states required
+this."
+
+- **New York -- clearly documented, well-timed.** The 1838 Free Banking
+  Act required any bank organized under it to purchase specified state
+  bonds (or approved mortgages) and deposit them with the state
+  Comptroller in exchange for circulating notes -- a bank issuing $90 of
+  notes needed to buy and deposit roughly $100 face value of eligible
+  bonds. This is the clearest, best-documented mechanism found for any of
+  our 5 states, and NY was the first state to adopt it (1838), with only
+  Michigan and Georgia also adopting free banking in the 1830s -- most of
+  the other ~15 states that eventually followed did so later, in the
+  1850s. Timing fits S-1750's observed quiet period (starts Aug 1843,
+  5 years after the Act). **Caveat: could not confirm from search results
+  whether canal-pledged stocks specifically (vs. general-obligation
+  stocks) were on the eligible-securities list** -- the sources describe
+  "state bonds" generically. Sources: NBER WP 10654 ("Free Banking and
+  Bank Entry in Nineteenth-Century New York"), Richmond Fed *Econ Focus*
+  2018 Q1 "When Banking Was 'Free'", EH.net *Antebellum Banking in the
+  United States*.
+- **Ohio -- a real but smaller, later, and mistimed mechanism.** The
+  State Bank of Ohio (est. 1845, the "Kelley Bank Act") required a safety
+  fund equal to only 10% of note circulation, in "money or bonds of the
+  state or of the United States," deposited with a central board -- much
+  smaller in scale than NY's ~100%-collateralized system. Critically,
+  **this law postdates the start of Ohio's observed trading gap by about
+  two years** (gap begins Sep/Oct 1843; the Act is 1845) -- so it cannot
+  explain the *onset* of S-2010/S-2100/S-2110's quiet period, only a
+  possible continuation after 1845. This is real evidence *against* a
+  clean bank-holding story for Ohio, at least as the sole explanation.
+  Source: Ohio History Central, "Kelley Bank Bill of 1845"; Holdsworth,
+  *Money and Banking*, ch. 74 ("State-Owned Banks").
+- **Alabama -- a different mechanism entirely, doesn't map onto the
+  question.** The Bank of the State of Alabama (est. 1823, branches added
+  through the 1830s) was capitalized by the *state selling bonds and
+  using the proceeds to fund the bank* -- the reverse direction of NY's
+  system, where independent banks buy and hold state bonds as backing.
+  This doesn't predict reduced open-market trading of Alabama bonds the
+  way a note-backing requirement would; if anything it implies more
+  bonds were issued/sold, not fewer withdrawn from circulation. It's
+  possible the state's own bank held unsold bond inventory internally,
+  but that's a different, unconfirmed channel from what the advisors
+  asked about, not something found in these sources. Source:
+  FindLaw/*Darrington v. Bank of Alabama* (1851), Encyclopedia of
+  Alabama, "Banking Industry in Alabama."
+- **Indiana -- no mechanism found.** The State Bank of Indiana (chartered
+  1834) was half state-owned (state bought half the shares directly with
+  cash capital), similar in structure to Alabama's system, not a
+  free-banking bond-deposit scheme. Indiana's actual free banking law
+  came in 1852, after this project's entire data window. No evidence
+  found of an 1830s-40s Indiana requirement for banks to hold state bonds
+  as note backing -- moot anyway, since Indiana's primary GO codes
+  (S-0510/S-0540) aren't flagged as sparse (2.1-2.8 obs/month, actively
+  traded).
+- **Pennsylvania -- no mechanism, consistent with no sparse PA bonds.**
+  PA did not adopt free banking until 1860, well outside this project's
+  window, and maintained a restrictive, case-by-case bank-chartering
+  policy up to that point. No PA-specific bond-backing requirement found.
+  Consistent with the trade-density check above: none of PA's 5 primary
+  codes are flagged sparse. Source: EH.net *Antebellum Banking in the
+  United States*.
+
+**Overall caveat, matching this project's existing citation standard:**
+all of the above rests on web-search-summarized secondary sources (NBER
+working papers, Federal Reserve historical retrospectives, state
+historical societies), not a primary-document read of any state's actual
+banking statutes or a bank's or Comptroller's actual bond-holding
+records. This is the same caveat level as the no-bailout anchor date and
+the default-period citations elsewhere in this file -- treat as a
+plausible, reasonably well-sourced narrative, not a proven mechanism tied
+to these specific bond codes.
+
+### Classification: (a) bank-held / (b) known maturity exclusion / (c) unknown, per flagged bond
+
+Checked whether the near/past-maturity exclusion flags (already used
+elsewhere in this project) could explain any of the four flagged bonds'
+sparseness. **Answer: no, for all four** -- none of the observed gaps
+fall inside a 12-month pre-maturity or post-maturity window:
+
+- **S-0040 (Alabama):** has no maturity year in the codebook at all (see
+  `NO_MATURITY_STATES`), so the maturity-exclusion mechanism doesn't even
+  apply to it by construction. **(c) unknown**, with a weak, unconfirmed
+  circumstantial link to Alabama's state-bank structure (see research
+  above) -- not strong enough to call it (a).
+- **S-2010 (Ohio):** matures 1850; its near-maturity window would be
+  Jan 1849-Jan 1850, but the observed 1,764-day gap (Sep 1843-Jul 1848)
+  ends a full 5 months before that window even opens. **(c) unknown**,
+  leaning toward the "liquidity concentrated onto S-2080" explanation
+  above rather than (a), since the Kelley Act's 1845 date doesn't line up
+  with the gap's 1843 start.
+- **S-1750 (NY canal):** matures 1850; its entire observed history ends
+  Feb 1848, nearly two years before its own near-maturity window would
+  open -- the gap is squarely mid-life. **(a) bank-held is the most
+  plausible of the three states**, given NY's clearly-documented and
+  well-timed 1838 Free Banking Act, though this is circumstantial (timing
+  and legal mechanism both fit; no direct record of this specific bond
+  sitting in a bank vault was found).
+- **S-2190 (Ohio canal):** no maturity year given, and its 2 total
+  observations are both from 1825 -- decades before this project's study
+  window and before any of the relevant banking law existed. **(c)
+  unknown / not applicable** -- this isn't a "thinly traded during our
+  window" problem, it's "essentially absent from this data source during
+  our window," a data-coverage limit rather than a trading-pattern
+  finding.
+
+**Bottom line for the "does sparse data undermine the yield findings"
+question:** for Ohio (S-2010) and NY (S-1750), the evidence leans toward
+genuine post-1843 illiquidity in specific issues (plausibly, but not
+provenly, bank-absorption for NY; more likely a liquidity-concentration
+effect for Ohio) rather than a data-processing artifact of this
+project's own maturity-truncation rules. Neither S-2010 nor S-1750 are
+used as PA/Ohio/NY's sole evidence in any current chart (Ohio's primary
+persistence claim rests mainly on S-2080/S-2100/S-2110; NY's rests on
+S-1650, not the canal codes) so this doesn't overturn any existing
+finding, but it's a real caveat on data quality for the secondary/canal
+comparison specifically, which hasn't been built yet.
+
+### Not yet done / open follow-ups from this pass
+
+- `output/trade_density.csv` was generated by an ad hoc script run
+  directly, not saved as a `scripts/*.py` file -- if this check needs to
+  be reproducible or re-run after new bonds are added, it should be
+  turned into a proper script (not done yet, out of scope for this pass
+  per instructions to only touch `output/trade_density.csv` and this
+  file).
+- Did not check whether the *actual* NY Comptroller bond-deposit
+  registers (a primary source, not currently in `data/raw/`) could
+  directly confirm which specific bonds banks held -- would be the real
+  test of the (a) vs (c) classification for S-1750, but wasn't sourced in
+  this pass.
+- Did not check Ohio's, Alabama's, or Indiana's state banking statutes
+  directly (primary documents) -- everything above is secondary-source
+  web search, per the caveat.
+- The Alabama ~30-cents-on-dollar railroad bond mention (flagged at the
+  third meeting) is still unverified.
+- The city-bond question (state vs. city credit spillover) from the third
+  meeting is still not started.
+
+## Immediate Next Steps (current, supersedes all earlier "next step" sections)
+
+1. Verify the Alabama ~30-cents-on-dollar railroad bond mention -- same
+   episode as the 1840s default cluster, or a different/later one?
+2. Check for genuine city-issued (Philadelphia, NYC) bond codes in
+   existing data sources; if found, build a city-vs-state comparison
+   (third-meeting item 3).
+3. If pursuing the bank-held question further: source NY Comptroller
+   bond-deposit registers (primary document) to directly test whether
+   S-1750 specifically was bank-held, rather than relying on the
+   circumstantial timing/legal-mechanism argument above. Same for Ohio's
+   state banking statute text, to check whether it names eligible bond
+   series explicitly.
+4. Canal/robustness comparison script (S-1750/S-1820/S-1950 for NY, plus
+   Indiana's Butler Bill preferred/deferred tranches) still NOT built as
+   a standalone script. Per this pass's finding, **build it without Ohio's
+   S-2190** (no usable-window data) rather than including it as a
+   token/placeholder -- needs a decision confirmed with advisors first,
+   since it changes the shape of the canal-comparison chart from 3 states
+   to 2.
+5. Feb 11 1843 anchor date still rests on two secondary sources only --
+   not yet verified against a primary document (Congressional Globe
+   transcript, McGrane's book).
