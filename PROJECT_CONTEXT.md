@@ -559,6 +559,65 @@ early version of this chart was an artifact of the YTM/default-period
 issue, not a real finding -- important to not cite the old 13pp number
 anywhere in the writeup.
 
+### 2026-07-28: Resolution of the "~30 cents on the dollar" railroad-bond flag
+
+Followed up on the open flag from the Third Advisor Meeting section (item
+1): a source mentioned Alabama paying bondholders roughly 30 cents on the
+dollar on railroad-guaranteed bonds, unclear if same episode.
+
+**Resolved: (b) a distinct, later episode -- Alabama's Reconstruction-era
+railroad-aid bond crisis, not the 1840s episode this project studies.**
+Confident dismissal, not a loose end:
+
+- Alabama's 1867 internal-improvements act had the governor endorse
+  railroad bonds ($12,000/mile per qualifying railroad); a Feb. 1870 act
+  separately loaned $2M in state bonds to the Alabama & Chattanooga
+  Railroad, which defaulted on interest in January 1871 (state seized the
+  railroad's property mid-1871). Roughly $18M of these railroad-aid bonds
+  were issued/endorsed in total.
+- Governor George S. Houston's 1875-76 debt commission (Bethea and
+  Lawler) recognized only $18M of claims as legitimate, later cut to
+  $12.5M -- against original face claims cited around $30M -- with
+  Alabama & Chattanooga bondholders hit hardest. This is consistent with
+  (though I could not find an exact primary-source citation for) a
+  "~30 cents on the dollar" summary of that reduction for the
+  worst-affected bondholders.
+- **Directly confirms the two episodes are distinct**, from the same
+  Wallis NBER working paper ("Sovereign Debt and Repudiation," WP 10753)
+  already cited elsewhere in this file as a source for Alabama's 1840s
+  non-default: Wallis explicitly separates "Alabama early in 1842
+  re-instituted direct taxation... managed... to meet its debt service"
+  (the 1840s episode) from the "postbellum period," when "nearly
+  $18,000,000 of railroad aid bonds were issued or endorsed, with the
+  repudiated debt remaining at about $13,000,000" (the Reconstruction
+  episode) -- two clearly separated paragraphs in the same source, not an
+  ambiguous mixed account.
+- **No possible date overlap with this project's data window.** Our
+  Alabama price series (S-0030, S-0040) run 1842-1853; the railroad-aid
+  bonds weren't issued until 1867 at the earliest -- 14 years after our
+  data ends. Different instruments entirely (antebellum general-purpose
+  state bonds vs. postbellum railroad-endorsement bonds), different
+  political era (antebellum panic-era state finance vs. Reconstruction),
+  different state government (this project's Alabama is the 1840s
+  Democratic-controlled state; the railroad bonds were issued under the
+  Reconstruction-era Republican government Houston's commission later
+  moved against).
+- **Conclusion: not relevant to the Alabama "risky but survived"
+  reclassification for the 1840s window.** The reclassification (Alabama
+  avoided default in the 1839-43 episode via taxation + bank liquidation)
+  stands independent of this later, unrelated railroad-bond history.
+  Confidently dismissed -- no further action needed on this flag.
+
+Sources: Wallis, "Sovereign Debt and Repudiation: The Emerging-Market
+Debt Crisis in the U.S. States, 1839-1843" (NBER WP 10753) -- already a
+project source, and the one that directly resolves this; Encyclopedia of
+Alabama, "Congressional Reconstruction in Alabama"; Bhamwiki, "Alabama &
+Chattanooga Railroad"; secondary web summaries of the 1867 internal
+improvements act and 1876 Houston debt commission (same caveat level as
+other web-search-sourced claims in this file -- the exact commission
+dollar figures rest on secondary summaries, not a primary reading of the
+commission's report itself).
+
 ## Final Chart Captions + Meeting Prep Doc
 
 Added two footnotes not previously present: an `NY_DATA_NOTE` ("New York
@@ -965,30 +1024,252 @@ comparison specifically, which hasn't been built yet.
   directly (primary documents) -- everything above is secondary-source
   web search, per the caveat.
 - The Alabama ~30-cents-on-dollar railroad bond mention (flagged at the
-  third meeting) is still unverified.
+  third meeting) is now resolved -- see the dated note under "Alabama
+  Reclassification" above: it's a distinct Reconstruction-era episode
+  (1867-76), not relevant to this project's 1840s window.
 - The city-bond question (state vs. city credit spillover) from the third
-  meeting is still not started.
+  meeting has now had its scoping check done -- see "City-Level Bonds --
+  Scoping Check" below. The comparison itself is still not built.
+
+## 2026-07-28: City-Level Bonds -- Scoping Check
+
+Follow-up on Third-Meeting item 3 (does default punishment spill onto
+city bonds that didn't themselves default?). Scoping only -- **no
+comparison script or chart was built**, no existing output file was
+touched. This required parsing two sheets that `parse_securities.py`
+has never touched: Philadelphia1.xls's **"Municipal Debt"** sheet and
+New-York.xls's **"City Debt"** sheet (both previously unused -- confirmed
+via `xlrd.Book.sheet_names()` that both files have dedicated municipal-
+debt sheets, distinct from the "U.S. and State Debt" / "NY State Debt" /
+"Other State Debt" sheets already parsed). Both use the same paired
+code/code-`a` column layout as the state-debt sheets, prefixed **"C-"**
+(codebook `Type` = "Municipal Bond") instead of "S-".
+
+**Answer: yes, genuine city-issued bond codes with real price data exist
+-- and for Philadelphia, some are as dense or denser than the state
+bonds already in the primary series.**
+
+### Philadelphia (Philadelphia1.xls, "Municipal Debt" sheet)
+
+43 distinct C-codes on this sheet. Filtering the codebook Name field to
+entries actually named "Philadelphia" (as opposed to other cities also
+sold on the Philadelphia exchange, see below), the strongest candidates
+for a like-for-like city-vs-state test:
+
+| Code | Name | Obs | Date range | Note |
+|---|---|---|---|---|
+| C-1100 | Philadelphia 5s, r. 1846 | 421 | 1835-01-17 to 1844-12-07 | Maturity-matched to state's S-2250 ("Pennsylvania 5s, r. 1846") almost exactly; spans the Apr 1843 signal date with dense coverage on both sides |
+| C-1310 | Philadelphia County 5s, old r. 1860 | 369 | 1842-12-31 to 1850-12-28 | Full post-signal coverage into the 1850s |
+| C-1300 | Philadelphia County 5s, new r. 1860s | 361 | 1842-12-31 to 1850-12-28 | Same |
+| C-1260 | Philadelphia 6s, r. 1852 | 367 | 1840-12-19 to 1850-02-16 | Spans signal date, good density |
+| C-1330 | Philadelphia County 6s, r. 1860 | 295 | 1842-12-31 to 1850-02-16 | |
+| C-1090 | Philadelphia 5s, r. 1845/6 | 213 | 1831-07-23 to 1847-05-01 | |
+| C-1140 | Philadelphia 5s, r. 1850-1872 | 255 | 1844-12-14 to 1850-12-28 | Starts right where C-1100 ends -- a possible bridge, same category of judgment call as PA's own S-2410/S-2460 bridge |
+
+C-1100 in particular is directly comparable in density to PA's own
+primary bonds (S-2330: 93 obs / S-2410: 177 obs over similar windows) --
+**Philadelphia the city was, if anything, more actively quoted than
+Pennsylvania the state** in this exact window, which is itself a
+suggestive data point (a city untouched by its state's default kept
+trading busily) worth noting even before building the formal comparison.
+
+Note: `C-1015` ("Philadelphia City" -- the one codebook entry literally
+matching that name from the earlier keyword search) has **zero price
+data** in either the Municipal Debt sheet or anywhere else checked -- a
+codebook-only listing. The real usable Philadelphia city bonds are the
+"Philadelphia [5s/6s], r. [year]" and "Philadelphia County [5s/6s]"
+series above, found by scanning the sheet's actual columns rather than
+by keyword-matching the codebook Name field alone -- the keyword search
+alone would have wrongly concluded Philadelphia had no usable city bond.
+
+**Bonus finding:** this same sheet also carries other cities' bonds sold
+on the Philadelphia exchange, already downloaded, no extra file needed:
+**Cincinnati 6s (C-0436, 351 obs, Dec 1842-Dec 1850)** and **Pittsburgh
+6s (C-1394, 350 obs, Dec 1842-Dec 1850)** are both dense and span the
+policy window well. (Allegheny City/County, St. Louis, Nashville, and a
+second New Orleans series are also present but short/sparse -- mostly a
+single isolated 1850 window each.) Cincinnati is notable as an
+in-state comparison point for Ohio (our "safe" bucket).
+
+### New York City (New-York.xls, "City Debt" sheet)
+
+70 distinct C-codes, covering New York City Corporation bonds, NYC water/
+fire loan bonds, Brooklyn bonds, and one Jersey City entry. Density is
+much thinner and choppier overall than Philadelphia's -- most codes have
+under 20 scattered observations -- but several usable candidates exist:
+
+| Code | Name | Obs | Date range |
+|---|---|---|---|
+| C-0698 | New York City 5s, Water Loan, 1870 | 147 | 1843-01-07 to 1853-11-30 |
+| C-0695 | New York City 5s, Water Loan, 1858 | 123 | 1843-01-21 to 1853-11-16 |
+| C-0696 | New York City 5s, Water Loan, 1860 | 98 | 1843-10-07 to 1853-12-24 |
+| C-0660 | New York City 7s, 1857 | 79 | 1843-01-21 to 1852-08-11 |
+| C-0650 | New York City 7s, 1852 | 68 | 1843-01-21 to 1852-04-03 |
+| C-0320 | Brooklyn 6s | 55 | 1843-02-11 to 1853-06-18 |
+
+All six start right around the policy signal (Jan-Oct 1843) and run well
+into the 1850s -- genuinely usable, though none match Philadelphia's
+C-1100 for pre/post-signal density on both sides of the April 1843 cutoff
+specifically (most NYC candidates only start quoting *at or after* the
+signal, so they can't support a pre/post-signal comparison the way
+C-1100 can -- only a post-signal levels/trend comparison).
+
+### Other city files (Baltimore, Boston, Charleston, New Orleans, etc.)
+
+**Not checked -- not currently downloaded.** Per the Data Sources list,
+only `New-York.xls`, `Philadelphia1.xls`, and `Securities Index.xls` are
+actually present in `data/raw/`; the other EH.net city files are listed
+as "available if needed" from the source site but were never fetched.
+Given Philadelphia1.xls's Municipal Debt sheet already yields a usable
+Philadelphia-vs-Pennsylvania pair (plus bonus Cincinnati/Pittsburgh data)
+and New-York.xls's City Debt sheet yields a usable NYC/Brooklyn set, a
+first city-vs-state comparison doesn't require downloading anything new.
+Downloading additional city files (e.g. Baltimore, which would let a
+Maryland state-vs-city comparison), would be a separate future step, not
+done here since it wasn't necessary to answer the scoping question and
+wasn't asked for in this pass.
+
+## 2026-07-28: Philadelphia (City) vs. Pennsylvania (State) Yield Comparison
+
+Built the first city-vs-state comparison (Third-Meeting item 3), scoped
+narrowly to Philadelphia vs. Pennsylvania only -- Cincinnati, Pittsburgh,
+and NYC/Brooklyn deliberately NOT included in this pass (see Next Steps).
+New outputs: `output/city_vs_state_yields.csv` (1,843 rows: 1,422
+Pennsylvania-state + 421 Philadelphia-city) and `output/chart_city_vs_state.png`.
+No existing file was modified. As with the trade-density pass, this was
+computed via an ad hoc script, not saved to `scripts/` -- see Next Steps.
+
+### Step 1 finding, before anything else: C-1100 has a critical internal gap the earlier scoping check missed
+
+The prior scoping-check pass reported C-1100 as "421 obs, 1835-01-17 to
+1844-12-07... dense coverage on both sides" of the Apr 1843 signal. That
+was true of the overall date *range* but wrong about *density inside it*
+-- exactly the kind of mistake this project has hit before with code
+picks (see PA/NY re-scan history). Checking gaps directly (mirroring
+`calculate_yields.py`'s methodology) found a **343-day gap, Feb 25 1843
+to Feb 3 1844** -- C-1100 has **zero observations for the entire
+immediate post-signal period** (Apr 1843 through Jan 1844). Its only
+other gap over 90 days is this one; everything else is dense.
+
+**Maturity check (also step 1):** C-1100 matures 1846 (codebook: coupon
+5%, maturity 1846); its near-maturity window would be Jan 1845-Jan 1846
+and past-maturity on/after Jan 1846. The bond's entire observed range
+ends Dec 1844, a full year before either window opens -- **no
+near/past-maturity truncation applies at all**, cleanly, unlike several
+of PA's own state bonds.
+
+**Active-default override check (also step 1) -- confirmed NOT needed.**
+Web search found no record of the City of Philadelphia (as a government
+distinct from the Pennsylvania state government) suspending interest
+payments in this era -- only the state's 1842 default is documented
+anywhere. The price data itself corroborates this directly: C-1100 only
+dips from ~99 (1841) to a 91-94 range (late 1842-early 1843) -- a mild
+~6-8% decline -- then fully recovers to 101-104.5 by 1844, actually
+*above* its 1841 level. Nothing resembling PA state's collapse to the
+37-40 range. **No override applied; current yield is used throughout
+for a different reason -- see below.**
+
+### Method: current yield for both sides, not YTM, and here's why
+
+The task instruction was to match "the same method/conventions as the
+existing primary series," specified as current yield. This isn't a
+simplification -- it's actually the correct apples-to-apples choice
+given how PA's own numbers already work: PA's entire usable post-signal
+window (S-2330/S-2410, Dec 1842-Jan 1845) falls **inside** PA's own
+`DEFAULT_PERIODS` window (Aug 1842-Feb 1845), so `calculate_yields.py`
+already computes ALL of PA's post-signal comparison points using current
+yield via the active-default override, not YTM. Computing YTM for
+Philadelphia while PA is on current yield would have reintroduced
+exactly the yield-measure mismatch this project flagged and fixed for
+Alabama/Indiana. Current yield for both sides is therefore genuine
+methodological parity for this specific comparison, not a shortcut.
+
+### Result
+
+**Matched-window pre-signal (1835-01-17, Philadelphia's first obs,
+through Mar 31 1843):**
+| Entity | Mean yield | n |
+|---|---|---|
+| Pennsylvania (state) | 6.69% | 337 |
+| Philadelphia (city) | 5.06% | 380 |
+| **Spread** | **1.63pp** | |
+
+**Post-gap overlap window (Feb 3 1844-Dec 7 1844, the only period both
+series actually have data -- true apples-to-apples, n=41 each side):**
+| Entity | Mean yield | n |
+|---|---|---|
+| Pennsylvania (state) | 7.56% | 41 |
+| Philadelphia (city) | 4.88% | 41 |
+| **Spread** | **2.68pp** | |
+
+For context, PA's own broader post-signal average (Apr 1843-Jan 1845,
+n=88, including the period Philadelphia has no data for) is 8.76%,
+giving an 8.76% vs. 4.88% (n=41) = **3.88pp** spread if compared without
+matching windows -- included for reference but the 2.68pp matched-window
+figure above is the fair number, matching this project's established
+practice of not comparing series over mismatched windows (see the NY
+S-1650-vs-canal coverage-window discussion elsewhere in this file).
+
+**Reading:** the state-city gap widens from 1.63pp to 2.68pp across the
+signal, but the widening is driven almost entirely by Pennsylvania's own
+yield rising (6.69% to 7.56%), not by Philadelphia's yield moving at all
+(5.06% to 4.88%, essentially flat, if anything very slightly lower).
+This is a clean **no-spillover** finding for this one city-state pair:
+Philadelphia's own borrowing cost shows no reaction to either the state's
+Aug 1842 default or the Apr 1843 no-bailout signal, while the state's
+cost climbed and stayed elevated around it, in line with the state-level
+persistence finding already established for PA elsewhere in this file
+(the "PA still shows elevated post-signal yield after the S-2410
+correction" finding -- Philadelphia looks like an *outside* observer of
+that story, not a participant in it.
+
+**Important limitation, stated plainly per the task instructions:** the
+343-day data gap sits almost exactly on top of the immediate post-signal
+period, so **the city's immediate reaction to the Apr 1843 signal itself
+cannot be observed at all** -- this result only speaks to "was the city's
+credit still normal by Feb-Dec 1844," a level check about a year later,
+not a reaction-speed test. And this is **one city vs. one state** --
+Cincinnati, Pittsburgh, and NYC/Brooklyn were deliberately excluded from
+this pass per the task scope and remain open, unverified candidates
+(flagged in the prior scoping-check section) -- this finding should not
+yet be read as "cities in general were insulated from state default,"
+only as "in this one case, Philadelphia specifically was."
+
+### Not yet done
+
+- No script was saved for this comparison (parsing + yield calc +
+  chart were all done ad hoc, matching how the trade-density pass was
+  handled) -- would need `scripts/city_vs_state_yields.py` if this needs
+  to be reproducible or extended to other city/state pairs later.
+- Cincinnati vs. Ohio, Pittsburgh vs. (no direct state analog -- it's in
+  Pennsylvania too, a second PA city comparison point), and NYC/Brooklyn
+  vs. New York state are all still open, per the prior scoping check.
+- Did not re-verify whether other Philadelphia city bonds (C-1310/
+  C-1300/C-1260, flagged in the scoping check for 1850s reach) have the
+  same kind of hidden internal gap C-1100 had -- worth checking before
+  using them to extend this comparison past 1844.
 
 ## Immediate Next Steps (current, supersedes all earlier "next step" sections)
 
-1. Verify the Alabama ~30-cents-on-dollar railroad bond mention -- same
-   episode as the 1840s default cluster, or a different/later one?
-2. Check for genuine city-issued (Philadelphia, NYC) bond codes in
-   existing data sources; if found, build a city-vs-state comparison
-   (third-meeting item 3).
-3. If pursuing the bank-held question further: source NY Comptroller
+1. If extending the city-vs-state comparison: check C-1310/C-1300/C-1260
+   (Philadelphia County bonds, flagged for 1850s reach) for internal gaps
+   the same way C-1100 was just checked -- don't assume density from
+   total-obs-and-date-range alone, that undercounted C-1100's real gap.
+   Cincinnati (C-0436) vs. Ohio state, and NYC/Brooklyn vs. New York state
+   (S-1650), are both still open and unstarted.
+2. If pursuing the bank-held question further: source NY Comptroller
    bond-deposit registers (primary document) to directly test whether
    S-1750 specifically was bank-held, rather than relying on the
-   circumstantial timing/legal-mechanism argument above. Same for Ohio's
-   state banking statute text, to check whether it names eligible bond
-   series explicitly.
-4. Canal/robustness comparison script (S-1750/S-1820/S-1950 for NY, plus
+   circumstantial timing/legal-mechanism argument in the trade-density
+   section above. Same for Ohio's state banking statute text, to check
+   whether it names eligible bond series explicitly.
+3. Canal/robustness comparison script (S-1750/S-1820/S-1950 for NY, plus
    Indiana's Butler Bill preferred/deferred tranches) still NOT built as
-   a standalone script. Per this pass's finding, **build it without Ohio's
-   S-2190** (no usable-window data) rather than including it as a
-   token/placeholder -- needs a decision confirmed with advisors first,
-   since it changes the shape of the canal-comparison chart from 3 states
-   to 2.
-5. Feb 11 1843 anchor date still rests on two secondary sources only --
+   a standalone script. Per the trade-density pass's finding, **build it
+   without Ohio's S-2190** (no usable-window data) rather than including
+   it as a token/placeholder -- needs a decision confirmed with advisors
+   first, since it changes the shape of the canal-comparison chart from 3
+   states to 2.
+4. Feb 11 1843 anchor date still rests on two secondary sources only --
    not yet verified against a primary document (Congressional Globe
    transcript, McGrane's book).
