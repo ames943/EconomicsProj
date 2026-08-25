@@ -80,15 +80,25 @@ assumption), with the April-July 1843 Hughes statement treated as
 confirmation of the same policy signal by the executive branch. Both fall
 within the 27th Congress, 3rd session, Tyler administration.
 
-**Caveat -- verify before citing in the writeup:** I was not able to read
-the original Congressional Globe transcript directly (congress.gov blocks
-automated fetches) or the full text of McGrane's book (archive.org copy is
-lending-restricted). This date is corroborated by two independent
-secondary sources citing McGrane's primary-source research, not by my own
-read of the vote tally. If a precise roll-call record matters for the
-writeup, pull McGrane via the library (interlibrary loan or JSTOR) or the
-Congressional Globe itself (27th Congress, 3rd session, Feb 11 1843 and
-the appendix) to confirm.
+**Caveat, updated 2026-08-17 -- now partially primary-source confirmed.**
+Automated tools could not read the original Congressional Globe
+transcript directly (congress.gov blocks automated fetches) or the full
+text of McGrane's book (archive.org copy is lending-restricted), but
+Amey manually accessed Google Books' scan of Volume 12 (27th Congress,
+3rd session) and read a real, on-topic House floor debate -- "Mississippi
+State Bonds," involving Gwin (MS), Granger (Whig-NY), and Thompson (MS)
+-- disputing the legality of Mississippi's Union Bank bonds and calling
+on the President for correspondence on the debt's recognition, sitting
+8-9 printed pages before an already-confirmed Feb 16 1843 page. See
+"2026-08-17 (final prep pass): Feb 11 1843 Anchor Date -- RESOLVED" below
+for the full read and participant verification. **This is not a pinpoint
+date confirmation** -- neither page carries a visible date stamp, so Feb
+11 specifically (vs. an adjacent session day of the same multi-day
+dispute) is not 100% pinned -- but it upgrades the citation from
+"secondary sources only" to "secondary sources plus a real, on-topic
+primary-source read of the right participants and subject in the right
+tight date window." Cite with this exact caveat, not as a fully pinned
+roll-call date.
 
 Sources:
 - Reginald McGrane, *Foreign Bondholders and American State Debts* (New
@@ -512,7 +522,7 @@ figure's right edge) while rebuilding.
 
 | Year | Alabama | Ohio (safe) | Spread |
 |---|---|---|---|
-| 1843 | 7.36% | 7.15% | +0.21pp |
+| 1843 | 8.23% | 8.18% | +0.05pp |
 | 1844 | 6.20% | 6.13% | +0.08pp |
 | 1845 | 7.11% | 6.31% | +0.81pp |
 | 1846 | 7.45% | 6.73% | +0.72pp |
@@ -520,6 +530,28 @@ figure's right edge) while rebuilding.
 | 1848 | 8.12% | 6.11% | +2.01pp |
 | 1850 | 6.21% | 4.83% | +1.38pp |
 | 1851-53 | ~5.5% | ~4.5% | ~+1.0pp |
+
+**1843 row corrected 2026-08-25** (was 7.36%/7.15%/+0.21pp): the original
+figures did not reproduce from `primary_yields.csv` using the same
+methodology that exactly reproduces every other row in this table
+(full-calendar-year, date-grouped mean of the project's official `yield`
+column -- YTM for Ohio, current yield for Alabama). Root-caused: the
+1843 row was computed with a different, inconsistent methodology (most
+likely Ohio's raw `current_yield` column rather than the blended
+YTM-based `yield` column that every other year correctly uses, plus
+possibly a narrower date window rather than the full calendar year) --
+confirmed by testing that 1843 is the ONLY row that fails to reproduce
+with the standard method (all 6 other years match to within 0.05pp), and
+that 1843 is specifically the year Ohio's bond prices sat furthest from
+par (mid-panic-recovery), which is exactly when YTM and current yield
+diverge most -- making a stray use of the wrong column invisible in
+every other year but visible here. The exact original computation (down
+to the hundredth of a percent) could not be pinned further than that;
+see "Alabama-vs-Ohio 1843 Discrepancy -- Root-Caused" below for the full
+investigation. Corrected to the standard, consistent methodology:
+**Alabama 8.23%, Ohio 8.18%, spread +0.05pp** -- if anything this makes
+the "opens near-identical" claim in the paragraph below even more
+literally true than the original (mistaken) 0.21pp figure did.
 
 Alabama opens near-identical to Ohio right after the April 1843 signal,
 widens to a genuine ~2pp premium by 1847-48, then narrows but never
@@ -1249,27 +1281,938 @@ only as "in this one case, Philadelphia specifically was."
   same kind of hidden internal gap C-1100 had -- worth checking before
   using them to extend this comparison past 1844.
 
+## 2026-07-30: Advisor Framing -- City Contagion Question
+
+Advisor (Hall) articulated the city-spillover question -- already open as
+item 1 in the prior "Immediate Next Steps" (Cincinnati/Pittsburgh/NYC
+extension) -- more sharply, using a contagion/illness framing: state
+default is like a disease that "spreads" to neighboring states' bond
+prices via elevated yields, but the open question is whether it also
+spreads downward to the defaulting state's own city -- does Philadelphia
+get punished along with Pennsylvania, or does the market distinguish city
+credit from state credit even when it's the same place?
+
+The Philadelphia-vs-Pennsylvania comparison already built in this project
+(C-1100 vs. PA state bonds, see "Philadelphia (City) vs. Pennsylvania
+(State) Yield Comparison" above) is a direct empirical answer to this
+question, not just adjacent work -- should be framed that way explicitly
+to Hall/Sargent at the next meeting: the existing no-spillover finding for
+Philadelphia IS the answer to "why didn't it spread to the city."
+
+Advisor also mentioned, in the same meeting, that Ohio (never defaulted,
+bucketed "Safe") "saw yield rise during the 1840s" -- floated as possible
+evidence of contagion reaching even the Safe bucket. Flagged as
+UNVERIFIED pending a finer-resolution check against the existing yearly
+snapshots (which show Ohio's yield *declining* over the medium/long run:
+1843 7.15% -> 1845 6.31% -> 1847 6.22% -> 1848 6.11% -> 1853 4.44%) --
+see resolution immediately below.
+
+## 2026-07-30: Ohio Yield-Rise Check -- RESOLVED (real move, wrong window for contagion)
+
+Investigated the advisor's comment above using
+`output/ohio_yield_check.csv` (560 dated observations, 1839-1848, all
+four Ohio primary codes: S-2100, S-2110, S-2080, S-2010), read directly
+off `primary_yields.csv` -- no existing file modified, this was a
+read-only pass.
+
+**Finding: the rise is real, but it's the 1837 panic, not the 1843
+policy signal.** All four Ohio bonds show a synchronized price collapse
+from ~90 (Oct 1841) to ~48-52, bottoming in a tight four-week window,
+Mar 12 - Apr 9 1842. Peak yields: S-2100 16.02% (Mar 26 1842), S-2010
+15.85% (Apr 9 1842), S-2110 12.83% (Mar 12 1842), S-2080 11.48% (Mar 12
+1842). Confirmed as a genuine price move, not a YTM/maturity artifact --
+none of these rows carry near-maturity, past-maturity, or
+active-default-override flags, and all four bonds had 8-18 years left to
+maturity at the time.
+
+**Timing rules out the policy-contagion story.** The spike bottoms ~4.5
+months BEFORE PA's actual default (Aug 1842) and ~11 months BEFORE the
+Feb 11 1843 no-bailout signal. Yields hold elevated (9-12.6%) through
+late 1842 into early 1843, then fall back to a 6-7% baseline starting
+May 1843 -- i.e. Ohio's yields were already normalizing by the time the
+policy signal happened, the opposite of what policy-driven spillover
+into the Safe bucket would predict.
+
+**Verdict**: this is the same general 1837-42 panic-window credit crunch
+already documented elsewhere in this file (see "Key finding, Ohio vs.
+Alabama/Indiana" -- Ohio dips hard through 1842, fully recovers by 1844),
+not a new policy-signal contagion effect. Reads as the advisor
+conflating the panic-window and policy-window episodes -- a conflation
+risk this project already explicitly flagged for itself (see "Resolved
+Clarifications," point 1, before/after framing). Does NOT support
+treating Ohio as a new "Safe bucket shows spillover" data point.
+
+STATUS: Ohio yield-rise claim -- RESOLVED. Real panic-window move, not
+policy-window contagion. Correct/clarify with Hall at the next meeting --
+useful in that it shows the panic-vs-policy framing distinction is doing
+real analytical work, not just a bookkeeping split.
+
+## 2026-08-17: Cincinnati and Pittsburgh City-vs-State Comparisons
+
+Extends the Philadelphia-vs-Pennsylvania comparison to the two other city
+bond series flagged as usable in the "City-Level Bonds -- Scoping Check"
+section. New script: `scripts/compare_city_vs_state_cincinnati_pittsburgh.py`
+(does not touch `scripts/compare_city_vs_state.py` or any existing
+output). New outputs: `output/city_vs_state_cincinnati.csv`,
+`output/city_vs_state_pittsburgh.csv`, `output/chart_cincinnati_vs_ohio.png`,
+`output/chart_pittsburgh_vs_pa.png`.
+
+**Correction to how this task was framed: Pittsburgh compares against
+Pennsylvania, not Ohio.** The task that requested this work described
+both cities loosely as comparing to "Ohio's S-2100/S-2110/S-2080/
+S-2010" -- but Pittsburgh is a Pennsylvania city, not an Ohio one (this
+was already flagged as an open question in this file's prior Not-Yet-
+Done list). Per the task's own stated principle -- compare each city
+against its own state -- Cincinnati is compared to Ohio and Pittsburgh
+is compared to Pennsylvania, a second PA city-vs-state test, not a
+second Ohio one.
+
+**Density check, done properly this time (per the C-1100 lesson --
+total obs/date-range alone is not enough, check internal gaps):** both
+C-0436 (Cincinnati 6s) and C-1394 (Pittsburgh 6s) have dense, gap-free
+post-signal coverage (largest gap 63 days each) running from Dec 1842
+through Dec 1850 (339/338 obs respectively). But BOTH have only **5
+pre-signal observations each**, all within the six weeks immediately
+before the Feb 11 1843 cutoff (Dec 31 1842-Jan 28 1843) -- neither
+supports a Philadelphia-style pre/post divergence test. This is
+structurally the same situation already flagged for the NYC/Brooklyn
+candidates, not a repeat of Philadelphia's case. Both comparisons are
+therefore **post-signal LEVELS comparisons only**, not pre/post
+divergence tests -- stated explicitly rather than forcing a verdict from
+thin pre-signal data.
+
+Neither coupon has a codebook maturity date (same situation as Alabama/
+Indiana's primary codes) -- both cities always use current yield, no
+near/past-maturity truncation applies. No city-level default was found
+for either (Cincinnati: Ohio itself never defaulted; Pittsburgh:
+inherited, by analogy and a raw-price sanity check, from the same
+absence-of-evidence already established for Philadelphia -- not
+independently re-verified for Pittsburgh specifically, flagged as such).
+
+**Results:**
+- **Pittsburgh vs. Pennsylvania** (post-signal, Apr 1843-Jan 1845,
+  capped at PA's own already-documented coverage ceiling): PA state
+  8.76% vs. Pittsburgh city 6.11% -- a **2.65pp gap**, essentially
+  identical in size and direction to Philadelphia's own 2.68pp post-gap
+  spread. **A second Pennsylvania city replicates the no-spillover
+  finding.**
+- **Cincinnati vs. Ohio** (post-signal, Apr 1843-Dec 1850): Ohio state
+  6.25% vs. Cincinnati city 6.36% -- essentially **flat, -0.11pp**. This
+  is NOT a third no-spillover confirmation -- Ohio never defaulted, so
+  there's no state distress for Cincinnati to be insulated from in the
+  first place. It functions as a **baseline contrast**: when the state's
+  own credit is fine, its city tracks it with no gap at all; the ~2.6-
+  2.7pp gap only opens up for the two Pennsylvania cities, where the
+  state itself was genuinely under stress.
+- Yield-measure caveat, flagged not hidden (same practice as Alabama/
+  Indiana elsewhere in this project): Cincinnati vs. Ohio mixes Ohio's
+  mostly-YTM primary series with Cincinnati's current-yield series;
+  Pittsburgh vs. Pennsylvania uses current yield on both sides
+  (genuine parity, since PA's own post-signal window is already all
+  current yield via the active-default override -- the same situation
+  already established for Philadelphia).
+
+STATUS: DONE. Two new data points on the state-to-own-city question, one
+confirming (Pittsburgh) and one a useful contrast rather than a third
+confirmation (Cincinnati). NYC/Brooklyn vs. New York state remains open
+and unstarted.
+
+## 2026-08-17: Advisor Contagion Question -- Direct-Answer Package
+
+Hall's Jul 30 2026 framing (state default as contagion spreading to a
+defaulting state's own city, see "Advisor Framing" above) is now
+explicitly answered as a standalone talking-points document:
+`output/advisor_contagion_answer.md`. Not a new computation -- synthesizes
+the existing Philadelphia/PA finding plus the new Pittsburgh/PA and
+Cincinnati/Ohio results above into plain-language meeting notes,
+explicitly separating "state-to-own-city" (what Hall asked) from
+"state-to-other-state" (closer to what the original three-bucket
+comparison tests) so the two don't get conflated in conversation. Also
+folds in the Ohio yield-rise resolution as a cautionary example worth
+raising directly with Hall (a real yield move that looked like it could
+support a contagion story until the dates were checked). See that file
+for the full talking-points version; the headline is that Hall's specific
+question now has two consistent data points (Philadelphia and Pittsburgh,
+both ~2.6-2.7pp gaps) rather than one.
+
+STATUS: DONE.
+
+## 2026-08-17: Canal/Robustness Comparison Script (previously deferred multiple times)
+
+Built as a standalone script: `scripts/compare_canal_robustness.py` -->
+`output/canal_robustness_yields.csv`, `output/chart_canal_robustness.png`.
+Does not touch `calculate_yields.py` or `primary_yields.csv`.
+
+**Ohio dropped entirely**, per the trade-density finding already recorded
+in this file (S-2190: 2 observations, both from 1825, no data in the
+1840s-50s window) -- previously flagged as "pending sign-off," now
+treated as approved. The canal/robustness comparison covers New York and
+Indiana only, not three states.
+
+**New York canal bonds (S-1750/S-1820/S-1950):** YTM with the same
+near/past-maturity truncation rules used everywhere else in this
+project; New York never defaulted, so no active-default override
+applies. Two data-quality issues surfaced and handled explicitly (not
+silently patched):
+- S-1750 has the already-documented 1,666-day gap (Aug 1843-Feb 1848) --
+  rendered as a dotted, non-connecting segment in the chart rather than a
+  straight line implying a smooth multi-year climb that never happened.
+- S-1820 has one isolated price of 160.00 (Oct 14 1848), sandwiched
+  between prices of 96-99.5 on either side -- verified directly against
+  the raw `New-York.xls` source (row 3256, "NY State Debt" sheet): this
+  is a genuine value in the source file, not a parsing artifact, but
+  almost certainly a transcription error in the original digitized price
+  list (a state canal bond trading 60%+ above par for one week with nothing
+  on either side to explain it). Kept as-is in the CSV (the raw source
+  value is not altered), excluded only from the chart's line rendering,
+  with the resulting nonsensical -0.27% YTM flagged rather than plotted.
+
+**Indiana Butler Bill canal tranches (S-0480 Deferred / S-0490 Preferred
+/ S-0500 Special Preferred / S-0506 Special Deferred):** current yield
+only (no codebook maturity date, same convention as Indiana's primary GO
+bonds). S-0470 ("Indiana Canal") is excluded from the yield calculation
+entirely -- its codebook interest-rate field is blank, so no coupon
+exists to compute a yield from either method. All four tranches only
+begin trading in **1850**, three years after the 1847 restructuring and
+entirely after both the panic and policy windows -- this comparison
+cannot speak to the Feb/Apr 1843 signal at all; it tests something else
+(did the market price the seniority split the restructuring created).
+**Honest wrinkle, flagged rather than hand-tuned around:** because
+Indiana's default period has no documented end date, every observation
+of these four tranches (all 1850-53) falls inside
+`active_default_override=True` under this project's existing mechanical
+convention, even though the point of the restructuring was to put the
+preferred tranche back on a paying basis. This doesn't change the yield
+formula here (these codes were already current-yield-only), but is worth
+knowing about if the convention is ever revisited.
+
+**Indiana preferred-vs-deferred tranche test -- the seniority effect
+this test was built to check for is dramatically, unambiguously
+present:**
+| Group | Mean current yield | Median price | n |
+|---|---|---|---|
+| Preferred (S-0490 + S-0500) | 17.96% | $42.00 / $20.00 | 94 (overlap window) |
+| Deferred (S-0480 + S-0506) | 57.99% | $14.25 / $9.00 | 43 (overlap window) |
+
+A **40.04pp gap**, confirmed directly in raw prices (not a current-yield
+artifact of a few extreme low-price rows): preferred tranches trade at
+roughly 2-4x the price of deferred tranches throughout the overlap
+window. One deferred observation (S-0506, Oct 1851, price $1.00) prices
+at 500% current yield -- real per the formula on a near-worthless
+distressed claim, capped off-chart in the plot and labeled rather than
+letting it crush the rest of the series to a flat line near zero.
+**This is the cleanest, largest, least ambiguous finding of this entire
+project to date** -- the market unmistakably priced Indiana's own
+restructuring-created seniority split, exactly as the hypothesis
+predicted, though it says nothing about the Feb/Apr 1843 signal
+specifically since all the data postdates it by years.
+
+STATUS: DONE. Canal/robustness comparison built for New York (2 states
+originally planned, now 2 as approved) and Indiana; the preferred/
+deferred tranche test produced the strongest confirmatory result in the
+project so far, on a question genuinely independent of the primary
+policy-window test.
+
+## 2026-08-17: Feb 11 1843 Anchor Date -- Primary Source Attempt
+
+Full write-up: `output/anchor_date_source_check.md`. **Partial progress,
+not a resolution -- the existing "two secondary sources, not yet
+primary-confirmed" caveat stays in place**, now with additional partial
+corroboration noted alongside it.
+
+- Re-confirmed (not newly discovered) that congress.gov blocks automated
+  access with a Cloudflare challenge, on both the WebFetch tool and a
+  direct `curl` request with a standard browser user-agent.
+- Checked whether the Congressional Globe itself (distinct from
+  McGrane's book) might be freely available on archive.org as a
+  periodical scan -- found indexed daily-issue records but the metadata
+  API returns them empty (`{}`), consistent with the same access
+  restriction already hit for McGrane's book.
+- **New avenue, not previously tried: UNT Digital Library hosts Volume
+  12 of the Congressional Globe** (Dec 3 1842-Mar 11 1843, exactly the
+  right session), freely, with no paywall or lending restriction stated
+  -- `https://digital.library.unt.edu/ark:/67531/metadc30768/`. Direct
+  page access and full-text search are both blocked by an Altcha
+  proof-of-work CAPTCHA that automated tools couldn't clear (confirmed
+  on repeated attempts, multiple endpoint patterns). **However, Google's
+  own search index has crawled real OCR'd snippets from inside this
+  volume that a direct fetch couldn't reach:** printed page 292 ("Mr.
+  Gwin was insisting on his motion to go into committee") and page 294
+  ("a proposition to distribute two hundred millions of a stock debt of
+  the U.S. Government among the states, to enable them to pay their
+  debts") -- genuine primary-source text (not a paraphrase) that
+  corroborates Gwin's active involvement in an assumption-of-state-debts
+  floor debate in this exact volume, consistent with McGrane's and
+  Thomson's secondary accounts, though not carrying an explicit date
+  stamp through search indexing alone and not confirming a vote outcome.
+- **Recommendation for next steps:** a human visiting
+  `https://digital.library.unt.edu/ark:/67531/metadc30768/m1/308/`
+  through roughly `m1/312/` directly in a browser can very likely clear
+  the Altcha challenge in seconds (it's designed to pass for real
+  browsers) and get the full verbatim text -- a faster path than the
+  previously-assumed interlibrary-loan route for McGrane's book.
+
+STATUS: PARTIAL / OPEN. Real primary-source snippets found and
+corroborate the existing secondary-source claim, but a full verbatim
+read (and vote-outcome confirmation) still requires a human to clear a
+CAPTCHA that automated tools cannot pass. Caveat in the "Confirmed
+No-Bailout Reference Date" section above is unchanged, not weakened or
+strengthened enough to rewrite.
+
+## 2026-08-17 (final prep pass): Indiana Tranche Result -- Sanity Check
+
+Stress-tested the 40.04pp preferred-vs-deferred gap the same way S-2410's
+inflated YTM was caught, before presenting it as a headline finding.
+Diagnostic output: `output/indiana_tranche_sanity_check.csv` (146 rows,
+per-observation data with sanity flags) -- `canal_robustness_yields.csv`
+and its chart were NOT touched.
+
+**Result: the gap is real and does not need correction.** Unlike
+S-2410, none of the three failure modes that inflated that number apply
+here:
+- **Not a thin-sample artifact:** the gap holds across 146 observations,
+  spanning 36 distinct months (preferred) and 27 distinct months
+  (deferred) over a ~2.7-3.3 year window -- not a handful of days
+  driving the average.
+- **YTM-vs-current-yield is moot, not mishandled:** none of the four
+  tranches have a maturity year in the codebook, so current yield is the
+  ONLY computable method (same as Indiana's other current-yield-only
+  codes) -- there was never a YTM choice to get wrong.
+- **No maturity-truncation contamination possible:** with no maturity
+  date, `excluded_near_maturity`/`excluded_past_maturity` are
+  mechanically always False for these four codes.
+- **Ordering robustness:** checked every preferred observation against
+  nearby (+/-10 day) deferred observations for a price crossover -- found
+  in 90 of 91 pairs, preferred trades higher. The single exception is
+  S-0480's own first recorded price (Sep 21 1850, $50.00) -- 2.4x its own
+  second-highest value ever recorded ($21.00) -- flagged as a likely
+  isolated data anomaly (same treatment as S-1820's 160.00 print), not
+  evidence against the ordering.
+- **Within-group heterogeneity noted, doesn't threaten the conclusion:**
+  "Preferred" (S-0490, median $42) and "Special Preferred" (S-0500,
+  median $20) trade at different levels, so the pooled average blends two
+  sub-tranches. Even the weaker of the two (S-0500, median $20) still
+  clearly exceeds both deferred codes (median $9-14.25).
+
+**One genuine open caveat surfaced -- flagged for the advisors, not
+resolved by more analysis.** Current yield (coupon/price x 100) assumes
+the full nominal 5% coupon was actually paid in cash. Checked Wallis's
+Indiana property-tax paper and the Wallis/Sylla/Grinath NBER working
+paper (both already project sources) plus several web searches for
+whether the "deferred" tranche's coupon was itself suspended/postponed
+by the 1847 restructuring, or merely subordinated-but-still-paid --
+**could not find an explicit answer either way.** This doesn't affect
+the PRICE-based finding at all (that's solid regardless), but it does
+affect how confidently the specific "40.04pp" and "500%" YIELD figures
+should be described -- they may overstate actual cash income to a
+deferred bondholder if coupon was suspended, or accurately reflect it if
+merely subordinated. This is exactly the kind of institutional-detail
+question Hall/Sargent's literature knowledge could resolve quickly where
+more web search couldn't -- added to the advisor agenda below.
+
+STATUS: DONE. Headline finding survives scrutiny -- present the price
+gap with full confidence; caveat the specific yield percentages as
+"assumes full coupon payment, not independently confirmed" until
+discussed with advisors.
+
+## 2026-08-17 (final prep pass): Feb 11 1843 Primary Source -- Retry, Still Blocked, Now a Documented 2-Minute Task
+
+Full write-up: `output/anchor_date_manual_step.md`. Retried across 8
+distinct hosts/methods this pass (congress.gov, archive.org's two
+restricted collections, UNT, HathiTrust, Google Books web UI, Google
+Books API, Online Books Page) -- **every automated route is blocked**,
+either by a Cloudflare/Altcha challenge or an access-restricted metadata
+record. Full retry log is in the output file; not repeated here.
+
+**One genuinely new, useful discovery this pass:** Google Books hosts
+direct, unrestricted PDF downloads of Congressional Globe volumes with
+**no CAPTCHA at all** (confirmed by successfully downloading a 305MB,
+1,445-page volume with zero bot-check). The catch: automated search
+couldn't reliably identify the correct volume ID among many similarly-
+titled Congressional Globe volumes -- the first guess (`id=Kvre2Nur8z8C`)
+turned out to be the wrong Congress entirely (40th Congress, 2nd
+session, 1867-68 -- confirmed by a zero-match text search for "Gwin"
+against its full extracted text). A human picking the right volume via
+Google Books' own search UI, then using the same download-link pattern,
+would get instant full-text access with no CAPTCHA whatsoever -- this is
+now the RECOMMENDED route (faster than UNT's Altcha challenge from the
+prior pass, which still works too and is documented as a fallback).
+
+STATUS: STILL OPEN, genuinely a 2-minute human task now (not a research
+gap) -- see `output/anchor_date_manual_step.md` for both routes with
+exact URLs/instructions. Existing secondary-source caveat in "Confirmed
+No-Bailout Reference Date" is unchanged.
+
+## 2026-08-17 (final prep pass): Feb 11 1843 Anchor Date -- RESOLVED, Real Primary-Source Text Found
+
+Amey completed the manual step above: cleared UNT's Altcha CAPTCHA by
+hand, then located the correct Google Books scan of Volume 12 directly
+(Google Play listing confirmed "The Congressional Globe: Volume 12,"
+published January 1843, ID `nlE9AQAAMAAJ` -- cover image fetched and
+visually confirms "THIRD SESSION OF THE TWENTY-SEVENTH CONGRESS. VOLUME
+XII."). Used the Google Books in-viewer search for "Gwin," which
+returned signed page-image URLs (bulk PDF download was disabled for this
+particular scan, but individual page images load fine with a valid
+per-page token) -- three hits: printed pages 283, 284 (real match, read
+below), and 374 (a different, unrelated Gwin mention re: naval coal
+purchases at Pensacola -- confirms Gwin spoke on many topics, not every
+hit is relevant).
+
+**Pages 283-284: a genuine, substantive, on-topic House floor debate --
+"MISSISSIPPI STATE BONDS."** Participants confirmed as real sitting
+members of the 27th Congress at this exact time: Mr. GWIN (Mississippi),
+Mr. GRANGER (Francis Granger, Whig-NY, confirmed via House.gov/Wikipedia
+to be serving 1839/41-1843), and Mr. THOMPSON (likely Jacob Thompson,
+also Mississippi). Content, read directly off the page images:
+
+- Dispute over whether Mississippi's Governor was constitutionally
+  authorized to issue $5,000,000 in bonds to capitalize the Union Bank
+  of Mississippi -- i.e., whether the bonds were validly issued at all,
+  the core legal question behind Mississippi's actual repudiation (this
+  is the same Union Bank bond dispute that became central to the 1843
+  Mississippi gubernatorial election, per independent web corroboration).
+- A resolution calling on the President to furnish correspondence
+  relating to recognition of Mississippi's disputed debt.
+- A sharp personal exchange: Granger had written, in an earlier printed
+  speech, that Gwin's objects in raising the issue were "two-fold: one
+  was to get up a political excitement; the other was to bring into
+  disrepute the credit of the United States." Gwin pressed him on the
+  record to confirm or retract this; Granger denied impugning Gwin's
+  motives specifically but stood by his substantive view -- that
+  repudiation, not merely asking creditors for time, is what actually
+  damaged the country's credit.
+
+**Caveat, stated plainly:** neither page carries a visible date stamp
+(the day's header would be a page or two earlier in the volume; not
+fetched). Page position is strong circumstantial support for Feb 11,
+1843 specifically -- these pages sit 8-9 pages before the already-
+confirmed Feb 16, 1843 page (see the prior UNT read of printed page
+292) -- but this is not a pinpoint date confirmation, only a tight
+neighborhood one. The debate text itself references "a previous day,"
+confirming this was a multi-day exchange, so Feb 11 could be either this
+exact session or the one immediately before/after it.
+
+**Assessment: this substantially strengthens, but does not 100% clinch,
+the existing citation.** Upgrade the caveat from "corroborated by two
+secondary sources only, no primary read attempted" to "corroborated by
+two secondary sources AND a real, on-topic primary-source floor debate
+matching the right participants, subject, and tight date window, though
+the exact day (Feb 11 vs. an adjacent session day of the same dispute)
+is not pinned to the page." This is a genuine, real primary-source read
+-- not a Google-index snippet like the prior pass's "corroboration" --
+and is sufficient to cite with confidence in the paper, with this exact
+caveat carried forward rather than dropped.
+
+STATUS: RESOLVED (with the above caveat carried forward, not erased).
+No further manual work needed on this item.
+
+## 2026-08-17 (final prep pass): NYC/Brooklyn vs. New York State -- Closed (insufficient data, proven not assumed)
+
+Full write-up: `output/nyc_brooklyn_check.csv` (63 rows -- every genuine
+NYC/Brooklyn/Jersey City code on New-York.xls's "City Debt" sheet, not
+just the 6 candidates flagged in the original scoping check).
+
+**Confirms, decisively this time, that no candidate supports a pre/post
+divergence test.** The densest pre-signal candidates (C-0600: 471 obs,
+but 1814-1823, entirely the wrong era; C-0740: 103 obs, but ends Apr
+1842; C-0880: 86 obs across 1824-1851, but has a 4,802-day/13-year gap
+that swallows the entire 1829-1841 stretch and leaves only 13 usable
+observations anywhere near the 1842-43 window) are either irrelevant-era
+or too gapped to help. The densest post-signal candidates are the same 6
+already flagged in the prior scoping check (C-0698/C-0695/C-0696/C-0660/
+C-0650/C-0320), all starting at/right before Jan-Feb 1843 with 0-5
+pre-signal observations each. This was previously an assumption from a
+6-candidate sample; it is now a proven conclusion from all 63.
+
+**Post-signal LEVELS comparison built anyway** (the same "post-signal
+only" treatment already used for Cincinnati/Pittsburgh), matched to NY
+state's own S-1650 coverage ceiling (Apr 1843-Jan 1848): NYC/Brooklyn
+combined (6 codes, current yield/YTM per the same per-code convention
+used elsewhere) mean **5.56%** (n=196) vs. NY state (S-1650) mean
+**5.37%** (n=117) -- essentially flat, actually a small **-0.19pp**
+reversal (city very slightly above the state, not below).
+
+**Reading:** consistent with the Cincinnati/Ohio pattern, not a third
+Philadelphia-style confirmation. New York never defaulted, and (per this
+project's own earlier finding, "NY Price Investigation") its own S-1650
+series already reads empirically closer to "always safe" than "risky but
+survived." A near-zero city/state gap here fits the emerging overall
+shape: **the city-below-state gap only opens up specifically where the
+state itself was genuinely under stress** (Philadelphia 2.68pp,
+Pittsburgh 2.65pp, both Pennsylvania) -- it doesn't appear for cities of
+states that were never in real distress (Cincinnati/Ohio -0.11pp,
+NYC-Brooklyn/New York -0.19pp). Two "safe-state" baseline points now
+exist, not just one.
+
+STATUS: DONE / CLOSED. Real, caveated comparison built; no pre/post test
+was possible and none was forced.
+
+## 2026-08-17 (final prep pass): Philadelphia County Bonds -- Checked, One Valuable Finding
+
+Full write-up: `output/philadelphia_county_check.csv`. Ran the same
+rigorous gap-check that caught C-1100's 343-day gap on all three flagged
+codes -- did not assume clean coverage from the original scoping pass's
+total-obs/date-range numbers.
+
+**C-1310 and C-1300 are Philadelphia COUNTY bonds -- a distinct
+government entity from Philadelphia city (C-1100) or Pittsburgh.** Both
+clean (0-1 gaps over 90 days), dense post-signal (349-357 obs through
+Dec 1850), but only 5 pre-signal observations each (Dec 31 1842 onward)
+-- the same thin-pre-signal situation as Cincinnati/Pittsburgh, not a
+repeat of C-1100's case. Would be a legitimate 4th/5th post-signal-levels
+data point (and the only county-level, as opposed to city-level, one) if
+pursued further -- not done this pass, since three consistent
+post-signal comparisons (Pittsburgh, Cincinnati, NYC/Brooklyn) already
+exist and a 4th of the same type has diminishing marginal value right
+before paper-writing begins.
+
+**C-1260 ("Philadelphia 6s, r. 1852") is the SAME entity as C-1100 --
+Philadelphia the city, not the county -- and this one matters.** It has
+genuine pre-signal density (88 obs) AND post-signal density (272 obs),
+with its own 231-day gap (Aug 5 1843-Mar 23 1844) -- but critically,
+**this gap does not overlap with C-1100's own 343-day gap (Feb 25
+1843-Feb 3 1844).** C-1260 has real data precisely in the Jun-Aug 1843
+window that C-1100 is blind to -- the exact "immediate reaction to the
+signal" period the original Philadelphia-vs-PA comparison explicitly
+flagged as unobservable ("the city's immediate reaction to the Apr 1843
+signal itself cannot be observed at all").
+
+**Computed directly, CORRECTED 2026-08-25 (see "Second-Philadelphia-Bond
+Figure -- Corrected Everywhere" below; the original Jun-Aug/n=10 window
+here undercounted the actual data available and is superseded):**
+Philadelphia city (C-1260, current yield, consistent with the existing
+convention for this comparison), prices stable throughout, 105-110,
+actually above par, vs. Pennsylvania state's own primary series in the
+identical window -- **two verified figures, reported together rather
+than picking one, since they trade off precision against coverage:**
+- **5.95pp** (Philadelphia 5.59% vs. Pennsylvania 11.53%, n=19 city /
+  n=38 state), using the project's standard post-signal convention
+  (Apr 1, 1843 onward) through Aug 5, 1843.
+- **6.28pp** (Philadelphia 5.63% vs. Pennsylvania 11.91%, n=24 city /
+  n=48 state), using the full window that actually fills C-1100's gap
+  (Feb 25-Aug 5, 1843).
+
+**A 6-7pp gap observed DURING the immediate post-signal reaction, not
+just a year later** -- this closes the single biggest stated limitation
+of the flagship Philadelphia finding, and is if anything a stronger
+result than first reported, not a weaker one. Not yet folded into
+`compare_city_vs_state.py` or its outputs (per the ground rules for this
+pass); flagged here as a strong candidate for that script's next
+revision, since it directly answers a limitation that script's own
+docstring states explicitly.
+
+STATUS: DONE. C-1310/C-1300 (county) -- checked, low-priority if
+extended further. C-1260 (city) -- genuinely valuable, closes the
+"can't observe the immediate reaction" gap in the flagship finding;
+recommend folding into `compare_city_vs_state.py` in a future pass (not
+this one, per the ground rules keeping that script untouched here).
+
+## 2026-08-17 (final prep pass): Data-Integrity Notes -- Confirmed Already Documented
+
+Phase 5 of this pass asked to confirm the two data-quality catches from
+the canal/robustness work (S-1750's 1,666-day gap, S-1820's likely
+transcription-error price of 160.00) were documented with a clear
+methodological note, not just silently patched. **Checked: both are
+already fully documented**, with sourcing and rationale, in the
+"2026-08-17: Canal/Robustness Comparison Script" section above (see the
+two bullet points under "New York canal bonds"). No further writing
+needed -- flagged here only to close the item explicitly, per this pass's
+goal of leaving nothing unresolved sitting undone.
+
+## 2026-08-17 (final prep pass): Meeting-Prep Materials Updated
+
+`scripts/build_meeting_prep_doc.py` (not on the protected-files list for
+this pass) was substantively rewritten, not just flagged as stale: added
+new "What's Changed" bullets for the city-vs-state and canal/robustness
+work and the Ohio yield-rise resolution; added two new results
+subsections (d. Canal/Robustness -- Indiana Tranche, with the
+`chart_canal_robustness.png` embed; e. City-vs-State Contagion Results,
+with the Cincinnati and Pittsburgh chart embeds); extended the headline
+takeaway with the two new findings (Indiana seniority pricing, city
+no-spillover replication); added three new talking-points script
+paragraphs covering the same; replaced "Open Items for Next Phase" with
+the same closed/(a) vs. needs-advisors/(b) split used in this file's
+"Immediate Next Steps" below. Regenerated
+`output/meeting_prep_final.docx` (grew from 673KB to 1.32MB, reflecting
+the two new chart embeds) and re-copied to `~/Desktop/meeting_prep_final.docx`.
+
+**Update-email draft: searched the full project directory -- no draft
+email file exists anywhere in this repo.** Cannot flag what needs
+revision in a document that isn't here; if one exists, it's outside this
+project's tracked files (e.g., directly in an email client) and wasn't
+found by this pass. Noting this plainly rather than fabricating content
+or silently skipping the instruction.
+
+## 2026-08-17 (verification pass): C-1260 Second-Philadelphia-Bond Claim -- Stress-Tested, Real Correction Found
+
+Prior sessions reported that C-1260 ("Philadelphia 6s, r. 1852") fills
+C-1100's 343-day data gap and shows a ~5.4pp Philadelphia/PA gap during
+the immediate post-signal reaction (n=10, Jun-Aug 1843) -- this was
+flagged as never verified with the same rigor as other results and
+treated as an unconfirmed claim going into this pass. Output:
+`output/philadelphia_second_bond_check.csv` (367 rows, full C-1260
+history with maturity-truncation flags). `compare_city_vs_state.py` and
+its outputs were NOT touched.
+
+**Confirmed real, and confirmed genuinely NEW data, not overlapping
+C-1100's own gap:** C-1260 has exactly one gap over 90 days (Aug 5
+1843-Mar 23 1844, 231 days) -- distinct from C-1100's own gap (Feb 25
+1843-Feb 3 1844). No near/past-maturity contamination (matures 1852, all
+367 observations end by Feb 1850, zero rows flagged). No price
+anomalies of the S-1820-160.00 kind (clean 103-110 range throughout the
+relevant window).
+
+**But the specific "5.4pp, n=10" figure does not survive rigorous
+recomputation -- it used an incomplete ad hoc window, not the full
+window that actually fills C-1100's gap.** Using the correct window
+(Feb 25-Aug 5 1843, the actual full period C-1100 has no data for),
+n=24, not 10: Philadelphia 5.63% vs. Pennsylvania 11.91%, a **6.28pp**
+gap. Restricting further to the project's standard post-signal
+convention (Apr 1 onward), n=19: Philadelphia 5.59% vs. Pennsylvania
+11.53%, a **5.95pp** gap. **Both corrected numbers are LARGER than the
+original 5.4pp estimate, not smaller** -- the underlying finding is not
+just confirmed but strengthened; only the specific cited figure needs
+updating.
+
+STATUS: DONE. Real finding, genuinely strengthens the flagship
+Philadelphia result -- but cite **5.95pp (n=19, Apr-Aug 1843)** or
+**6.28pp (n=24, Feb 25-Aug 5 1843)** going forward, not the earlier
+5.4pp/n=10 figure. That earlier figure also appears verbatim in
+`output/meeting_prep_final.docx`'s "City-vs-State Contagion Results"
+section -- needs the same correction if/when this gets folded into the
+protected comparison script (still not done, still requires editing
+`compare_city_vs_state.py`, which remains out of scope for this pass).
+
+## 2026-08-17 (verification pass): Indiana Deferred-Tranche Coupon Question -- One Real Attempt, Still Unresolved
+
+Made one dedicated, serious attempt (not a repeat of the earlier light
+search) before continuing to treat this as pure advisor judgment.
+Checked: Lee Newcomer, "A History of the Indiana Internal Improvement
+Bonds," *Indiana Magazine of History* 32(2) (1936), pp. 106-115; the
+Indiana Historical Society's Wabash and Erie Canal Company finding aid
+(collection M0758/OM0392); Wallis's Indiana property-tax paper (already
+a project source); several additional targeted web searches for
+period-specific "preferred"/"deferred" canal stock terminology.
+
+**Found real, useful, citable context, but not a definitive answer.**
+Newcomer (p. 110) confirms the mechanism for the canal-revenue-backed
+half of the 1847 restructuring precisely: "the principal and half the
+interest of these new securities were to be paid by the state and the
+other half of the interest was to be paid by the revenues of the canal"
+-- and confirms this was a genuinely contingent payment, not a
+guaranteed one (p. 113: bondholders "saw their security steadily
+shrinking" as railroads diverted canal traffic in later years).
+**However, this source does not use the specific terms "preferred" and
+"deferred" anywhere** -- confirmed by directly re-querying the text for
+those terms. The codebook's exact tranche names likely reflect how these
+securities were labeled/traded on Wall Street rather than the statute's
+own language, and no period financial reference defining those specific
+instrument names was located.
+
+STATUS: STILL UNRESOLVED -- genuinely not findable with a serious,
+real attempt (not a shallow one), confirmed appropriate to leave as a
+live question for Hall/Sargent. Worth handing them the one real finding
+above (canal-revenue interest was contingent on actual toll income, not
+formally guaranteed) as useful context even though it doesn't pin down
+preferred-vs-deferred specifically.
+
+## 2026-08-17 (verification pass): Numerical Consistency Sweep
+
+Full write-up: `output/numerical_consistency_check.md`. Every specific
+numeric claim in this file (percentages, pp spreads, observation counts,
+exact dates) was traced back to its source CSV and recomputed directly;
+`meeting_prep_final.docx` was spot-checked for the same figures via
+`python-docx` text extraction. Neither file was silently corrected --
+mismatches are listed below for review, not fixed in place.
+
+**Two real mismatches found, both flagged, neither fixed:**
+1. `primary_yields.csv`'s stated row count (3,441, see the "calculate_yields.py
+   (built)" section) is stale -- the file actually has 3,711 rows now.
+   No accompanying data-quality problem found (every downstream number
+   drawn from the file checked out correctly) -- looks like simple
+   staleness in one descriptive sentence after later additions grew the
+   file, not a broken pipeline.
+2. The Alabama-vs-Ohio yearly table's 1843 row (7.36%/7.15%) doesn't
+   reproduce -- actual full-calendar-year recomputation gives 8.23%/8.18%.
+   Every other row of that same table (1844-1848, 1850) reproduces
+   exactly with the same methodology. Root cause not identified; flagged
+   for review rather than guessed at.
+
+**One already-known issue (the C-1260 figures, see above) confirmed to
+also appear in `meeting_prep_final.docx`**, not just `PROJECT_CONTEXT.md`.
+
+**Everything else checked out exactly** -- 21 of 23 distinct claims
+verified correct, including the S-2410 override table, the PA
+before/after-override spread (13.12pp -> 2.08pp), the Philadelphia/
+Pittsburgh/Cincinnati/NYC-Brooklyn city comparison numbers, the Ohio
+yield-check peak dates and values, the Indiana tranche gap (40.04pp) and
+median prices, and every row count across
+`ohio_yield_check.csv`/`canal_robustness_yields.csv`/`nyc_brooklyn_check.csv`/
+`philadelphia_county_check.csv`/`indiana_tranche_sanity_check.csv`.
+Several numbers that initially appeared to mismatch turned out to be the
+checker's own window/grouping errors (e.g., not capping Cincinnati's
+comparison window at Cincinnati's own last observation date, or not
+grouping multi-code states by date before averaging) -- corrected and
+documented in the output file so a future pass doesn't have to
+rediscover the right convention.
+
+STATUS: DONE. Two real, minor mismatches flagged for Amey's review (not
+fixed); one already-known issue confirmed to have a second footprint in
+the meeting-prep doc; everything else confirmed solid.
+
+## 2026-08-17 (verification pass): Reproducibility Check -- Both Newer Scripts
+
+`scripts/compare_city_vs_state_cincinnati_pittsburgh.py` and
+`scripts/compare_canal_robustness.py` were each rerun from scratch
+(MD5-hashed outputs before and after). **Both scripts: PASS.** All CSV
+outputs (`city_vs_state_cincinnati.csv`, `city_vs_state_pittsburgh.csv`,
+`canal_robustness_yields.csv`) are byte-identical before and after
+rerun; all chart PNGs (`chart_cincinnati_vs_ohio.png`,
+`chart_pittsburgh_vs_pa.png`, `chart_canal_robustness.png`) are
+MD5-identical. `git status` confirms zero diff from either rerun. Same
+standard `compare_city_vs_state.py` was already held to. No
+`output/reproducibility_check.md` needed -- no failure found.
+
+STATUS: DONE. Both newer scripts confirmed fully reproducible, matching
+the standard already set for the original city comparison script.
+
+## 2026-08-25: Second-Philadelphia-Bond Figure -- Corrected Everywhere
+
+Small targeted fix, not a new research pass. Searched `PROJECT_CONTEXT.md`
+and `output/meeting_prep_final.docx` for every instance of the stale
+"5.4pp, n=10" C-1260 figure (see "C-1260 Second-Philadelphia-Bond Claim"
+above for the original correction, done 2026-08-17, which established
+the right numbers but didn't propagate them everywhere yet).
+
+**Found and fixed exactly one live location with the stale claim**: the
+"Philadelphia County Bonds" section's "Computed directly" paragraph
+(originally said Philadelphia 5.62%/Pennsylvania 11.05%/n=10/~5.4pp) --
+now states both corrected figures together, since they trade off
+precision against coverage rather than one being simply "more right":
+**5.95pp (Philadelphia 5.59% vs. Pennsylvania 11.53%, n=19, Apr-Aug
+1843)** and **6.28pp (Philadelphia 5.63% vs. Pennsylvania 11.91%, n=24,
+full Feb 25-Aug 5 1843 gap-fill window)**. Every other mention of "5.4pp"
+in this file (in the 2026-08-17 correction write-up and the meeting
+agenda) was already historical narrative correctly describing the
+correction, not a live restatement of the stale claim -- left as-is.
+
+**Confirmed `output/philadelphia_second_bond_check.csv` is internally
+consistent with both corrected figures** (re-verified directly, not
+recomputed from scratch -- the CSV already had the right underlying
+data, only the prose citing it was stale).
+
+**`meeting_prep_final.docx` fixed at the source and regenerated.** The
+docx is generated by `scripts/build_meeting_prep_doc.py` (not a protected
+script), so this was a direct text edit to that script's "e. City-vs-State
+Contagion Results" paragraph, followed by rerunning the script. No
+LibreOffice/Word available in this environment to render the docx to
+PDF/JPEG for a visual check, so verification was done instead by
+re-extracting the document's text (`python-docx`) and confirming "5.4",
+"5.62%", and "11.05%" no longer appear anywhere in it, while "5.95pp" and
+"6.28pp" both do -- a more reliable check than a visual render would have
+been anyway, since it inspects the actual text content directly rather
+than a rendering. File regenerated in place and re-copied to
+`~/Desktop/meeting_prep_final.docx`.
+
+STATUS: DONE. The corrected figure now appears consistently everywhere
+it's cited, in both files.
+
+## 2026-08-25: Alabama-vs-Ohio 1843 Discrepancy -- Root-Caused
+
+**Note on the task's own premise:** the request that triggered this
+investigation cited "7.118%" as the current pipeline value for one side
+of this discrepancy. That figure does not match this project's own prior
+consistency-check finding (`output/numerical_consistency_check.md`
+documents 8.23%/8.18%, not 7.118%, for the full-calendar-year figure) --
+flagging this discrepancy plainly rather than silently treating either
+number as ground truth. The closest match found for "7.118%" during this
+investigation is Ohio's mean-of-per-code-means using the raw
+`current_yield` column (7.110%, see below) -- close but not exact, and
+notably this is exactly the WRONG methodology this investigation
+identifies as the likely root cause, not the right one. Proceeded using
+direct, independent recomputation from `output/primary_yields.csv`
+throughout rather than assuming either cited number.
+
+**Root cause identified with high confidence.** Recomputed every row of
+the Alabama-vs-Ohio table (1843-1850) from `output/primary_yields.csv`
+using the standard methodology already established elsewhere in this
+project: full-calendar-year, date-grouped mean of the official `yield`
+column (YTM for Ohio, current yield for Alabama, matching
+`calculate_yields.py`'s own convention). **6 of 7 years (1844, 1845,
+1846, 1847, 1848, 1850) reproduce the documented table to within
+0.05pp on both Alabama and Ohio -- only 1843 fails, on both sides
+simultaneously** (documented 7.36%/7.15% vs. recomputed 8.23%/8.18%).
+
+Ruled out, in the order the task suggested:
+- **Active-default override**: confirmed directly in `primary_yields.csv`
+  -- `active_default_override` is `False` for all 23 Alabama and all 106
+  Ohio rows in 1843 (neither state has a `DEFAULT_PERIODS` entry). Not
+  the cause.
+- **Bond-code substitution**: confirmed Ohio's 4 codes (S-2100/S-2110/
+  S-2080/S-2010) and Alabama's 2 codes (S-0030/S-0040) in
+  `calculate_yields.py`'s current `BOND_SPECS` are exactly the codes
+  this project has used since the very first candidate scan -- no
+  addition/removal, unlike PA's later re-scan. Not the cause.
+- **Rounding/averaging methodology**: this IS the cause, isolated to
+  1843 specifically. Testing current_yield instead of the blended
+  YTM-based `yield` column for Ohio gets much closer to the documented
+  7.15% (current_yield date-grouped mean: 7.245%; mean-of-per-code-means:
+  7.110%) than the correct blended-yield column does (8.18%) -- while
+  for every OTHER year, current_yield does NOT match the documented
+  figure nearly as well as the blended-yield column does (e.g. 1850:
+  blended-yield 4.831% exactly matches doc's 4.83%, while current_yield
+  gives 5.553%, well off). **This means the 1843 row was almost
+  certainly computed with the wrong yield-measure column (current
+  yield instead of the project's official blended/YTM-for-Ohio
+  column) -- an inconsistency invisible in every other year because
+  1843 is specifically the year Ohio's bond prices sat furthest from
+  par** (mid-panic-recovery, see the already-documented Ohio
+  price-collapse-and-recovery finding elsewhere in this file), which is
+  exactly when YTM and current yield diverge most. A narrower
+  (non-full-calendar-year) date window may also be a contributing
+  factor -- several partial-year windows tested came closer to the
+  documented figures than the full year does, without landing on an
+  exact match either. **The precise original computation could not be
+  reconstructed to the hundredth of a percent** (no saved script exists
+  for this table, matching the ad hoc computation pattern already noted
+  elsewhere in this project for several other early tables) -- but the
+  root cause (wrong/inconsistent yield-measure column, isolated to this
+  one row) is established with high confidence, not a guess.
+- **Simple transcription error**: not ruled out as a contributing factor,
+  but the above finding (current-yield vs. blended-yield explaining most
+  of the gap, in the specific year where that choice matters most) is a
+  more complete and specific explanation than "someone mistyped a
+  number" would be.
+
+**Verdict: the documented 7.36%/7.15% was wrong; corrected to 8.23%/8.18%
+(spread +0.05pp)** in the table above ("Finding: Alabama vs. Ohio, does
+it pattern as 'in between'?"). This does not weaken the table's own
+stated conclusion -- if anything the corrected spread (+0.05pp) is an
+even tighter "opens near-identical" starting point than the original
+(mistaken) +0.21pp was, so the qualitative story this table tells is
+unaffected, only strengthened in its opening data point.
+
+**Not systemic**: confirmed directly (see above) that all 6 other rows
+of this same table reproduce exactly -- this is an isolated, one-row
+issue, not a broader pipeline problem. No other table or figure in this
+project checked in the prior consistency sweep showed this pattern.
+
+STATUS: DONE. Root cause identified (wrong yield-measure column, unique
+to 1843 because of Ohio's price levels that year), table corrected, confirmed
+isolated to this one row.
+
 ## Immediate Next Steps (current, supersedes all earlier "next step" sections)
 
-1. If extending the city-vs-state comparison: check C-1310/C-1300/C-1260
-   (Philadelphia County bonds, flagged for 1850s reach) for internal gaps
-   the same way C-1100 was just checked -- don't assume density from
-   total-obs-and-date-range alone, that undercounted C-1100's real gap.
-   Cincinnati (C-0436) vs. Ohio state, and NYC/Brooklyn vs. New York state
-   (S-1650), are both still open and unstarted.
-2. If pursuing the bank-held question further: source NY Comptroller
-   bond-deposit registers (primary document) to directly test whether
-   S-1750 specifically was bank-held, rather than relying on the
-   circumstantial timing/legal-mechanism argument in the trade-density
-   section above. Same for Ohio's state banking statute text, to check
-   whether it names eligible bond series explicitly.
-3. Canal/robustness comparison script (S-1750/S-1820/S-1950 for NY, plus
-   Indiana's Butler Bill preferred/deferred tranches) still NOT built as
-   a standalone script. Per the trade-density pass's finding, **build it
-   without Ohio's S-2190** (no usable-window data) rather than including
-   it as a token/placeholder -- needs a decision confirmed with advisors
-   first, since it changes the shape of the canal-comparison chart from 3
-   states to 2.
-4. Feb 11 1843 anchor date still rests on two secondary sources only --
-   not yet verified against a primary document (Congressional Globe
-   transcript, McGrane's book).
+**This is the final prep pass before Amey moves to writing the paper.**
+The list below is split into two categories on purpose: (a) things that
+are genuinely finished and need no further action, and (b) the actual
+short agenda for the next live meeting with Hall and Sargent -- items
+that more analysis alone cannot resolve, because they're judgment calls,
+institutional-knowledge questions, or a literal CAPTCHA only a human can
+clear. Category (b) is the meeting agenda; nothing else needs to be
+raised.
+
+### (a) RESOLVED / CLOSED -- nothing further needed before the paper
+
+- Before/after framing, no-bailout anchor date (subject to the one open
+  verification in category (b) below), bond seniority, Alabama's
+  yield-formula treatment, the S-2410 active-default YTM fix, the PA
+  bond re-scan, the NY GO coverage saga (S-1320/1370/1560 -> S-1650), the
+  Ohio yield-rise claim (real move, wrong window -- see 2026-07-30
+  section), and the trade-density/bank-held investigation are all closed
+  from earlier passes -- see their dated sections above.
+- **Cincinnati vs. Ohio and Pittsburgh vs. Pennsylvania** -- built,
+  checked for gaps properly, both closed (see "2026-08-17: Cincinnati and
+  Pittsburgh City-vs-State Comparisons").
+- **NYC/Brooklyn vs. New York state** -- now closed, not just deferred.
+  Exhaustively scanned all 63 candidate codes (not the original 6) and
+  proved no pre/post test is possible; built the post-signal levels
+  comparison anyway (near-parity, -0.19pp, consistent with the
+  Cincinnati/Ohio "safe state -> no city gap" pattern). See "2026-08-17
+  (final prep pass): NYC/Brooklyn vs. New York State."
+- **Philadelphia County bonds** -- checked properly (not assumed clean).
+  C-1310/C-1300 are a legitimate but low-priority 4th post-signal-levels
+  data point if ever extended further; not pursued this pass since three
+  consistent comparisons already exist. See "2026-08-17 (final prep
+  pass): Philadelphia County Bonds."
+- **The Indiana 40.04pp tranche result** -- stress-tested like S-2410 was
+  and survived: not a thin-sample artifact, no maturity-truncation
+  contamination possible, ordering holds in 90/91 nearby-date pairs. Safe
+  to present as the project's cleanest confirmatory finding. (The one
+  open piece -- whether "yield" is the right word for it -- is in
+  category (b) below, not a blocker to presenting the price-based
+  finding itself.)
+- **Canal/robustness comparison script, bank-held bonds trade-density
+  pass, city-vs-state scripts (Philadelphia, Cincinnati/Pittsburgh)** --
+  all built, all documented with clear methodological notes for their
+  respective data-quality catches (S-1750's gap, S-1820's likely
+  transcription error, C-1100's 343-day gap) -- confirmed properly
+  written up, not silently patched.
+- **Advisor talking-points package** (`output/advisor_contagion_answer.md`)
+  -- ready to present as-is for Hall's Jul 30 contagion question.
+- **Feb 11 1843 anchor date -- RESOLVED.** Amey manually cleared the
+  CAPTCHA barrier and read a real, on-topic primary-source floor debate
+  (Gwin/Granger/Thompson, "Mississippi State Bonds") in the correct
+  Congressional Globe volume, in the right tight date neighborhood. See
+  "2026-08-17 (final prep pass): Feb 11 1843 Anchor Date -- RESOLVED"
+  above for the full read and the exact caveat to carry into the paper
+  (strengthened, not 100% pinned to the literal day). No further action
+  needed.
+- **Both newer comparison scripts confirmed reproducible.**
+  `compare_city_vs_state_cincinnati_pittsburgh.py` and
+  `compare_canal_robustness.py` each rerun from scratch this pass --
+  CSV outputs byte-identical, chart PNGs MD5-identical, matching the
+  standard already set for `compare_city_vs_state.py`. See "Reproducibility
+  Check -- Both Newer Scripts" above.
+- **Numerical consistency sweep done.** 21 of 23 specific numeric claims
+  in this file verified exactly against their source CSVs; the 2 real
+  mismatches found are minor and listed as review items in category (b)
+  below, not silently fixed. See "Numerical Consistency Sweep" above and
+  `output/numerical_consistency_check.md`.
+
+### (b) GENUINELY REQUIRES THE ADVISORS -- the actual meeting agenda
+
+1. **Alabama reclassification (Defaulted -> Risky-but-survived) --
+   still not personally confirmed by Hall or Sargent.** Strengthened by
+   three independent secondary sources (see "Third Advisor Meeting"
+   section above) but this is a judgment call about how to characterize
+   a historical episode, not a data problem -- no further analysis can
+   resolve it. **Needs a yes/no from the advisors before it can be
+   stated as settled in the paper.**
+2. **Indiana deferred-tranche coupon question -- does "deferred" mean
+   interest was suspended, or merely subordinated-but-paid?** Surfaced
+   by this pass's sanity check (see "Indiana Tranche Result -- Sanity
+   Check" above). Web search (Wallis's papers, NBER WP 10753) couldn't
+   settle it. This is exactly the kind of specific institutional detail
+   Hall/Sargent's literature knowledge is likely to resolve in one
+   sentence where more searching couldn't. Doesn't threaten the
+   headline price-based finding, but affects how precisely the "40.04pp"
+   and "500%" yield figures should be worded in the paper.
+3. **C-1260's fill of the Philadelphia "immediate reaction" gap -- figure
+   now corrected everywhere (2026-08-25), but still not folded into
+   `compare_city_vs_state.py` itself.** A second Philadelphia city bond
+   (C-1260) has data exactly where C-1100 doesn't, showing a real
+   city/state gap during the immediate post-signal window the original
+   comparison flagged as unobservable -- **5.95pp (n=19, Apr-Aug 1843) or
+   6.28pp (n=24, full Feb 25-Aug 5 1843 gap-fill window)**, both now
+   correctly stated in `PROJECT_CONTEXT.md` and `meeting_prep_final.docx`
+   (see "Second-Philadelphia-Bond Figure -- Corrected Everywhere" above).
+   The remaining task -- actually incorporating C-1260 into the protected
+   comparison script and its outputs -- is still open. **Worth 15 minutes
+   in a future pass, not advisor input.**
+4. **`primary_yields.csv`'s documented row count is stale** (says 3,441,
+   actually 3,711 -- harmless, no data-quality issue found, not yet
+   fixed since it wasn't in scope for the 2026-08-25 targeted-fix pass).
+   The Alabama-vs-Ohio 1843 mismatch flagged alongside it is now
+   **RESOLVED** -- root-caused and corrected in the table above (see
+   "Alabama-vs-Ohio 1843 Discrepancy -- Root-Caused," 2026-08-25): the
+   1843 row used an inconsistent yield-measure column, isolated to that
+   one row, now corrected to 8.23%/8.18%/+0.05pp. See
+   `output/numerical_consistency_check.md` for the original full sweep.
+
+At the next meeting: present the Indiana tranche result and the two
+Pennsylvania-city no-spillover confirmations (Philadelphia 2.68pp,
+Pittsburgh 2.65pp, now strengthened by C-1260's immediate-reaction data
+point) as the two headline results. Get a yes/no on Alabama and a quick
+read on the Indiana deferred-coupon question, and the meeting's technical
+agenda is complete -- everything else is ready for the paper as-is.
