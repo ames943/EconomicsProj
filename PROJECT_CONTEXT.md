@@ -222,6 +222,13 @@ classification, so it can't answer the seniority question on its own.
 every Pennsylvania/Ohio/Alabama/Indiana/New York entry (327 rows total)
 for revenue-pledge earmarking (e.g. "Canal," "Turnpike").** Results:
 
+[Count note, added 2026-09-02: the per-state figures below (41 + 11 + 46
++ 29 + 200) sum to 327, but there are 326 *distinct* codebook rows --
+`B-1186` "Ohio and Pennsylvania" is a railroad corporate bond whose name
+matches two of the state strings, so a naive per-state tally double-counts
+it. It is not a state bond and does not affect the seniority
+conclusions.]
+
 - **Pennsylvania (41 rows):** No revenue-pledged bonds found. Every state
   entry is a plain "Pennsylvania 5s/6s, r. [year]" -- all general
   obligation. PA has no revenue-pledged bond to compare against.
@@ -409,12 +416,32 @@ for the panic-window robustness check, not the primary test.
 `scripts/calculate_yields.py` implements the above: YTM (Hastings
 approximation) for PA/Ohio/NY, current yield for Alabama/Indiana, both
 truncation flags, current yield always retained as a diagnostic column.
-Output: `output/primary_yields.csv` (3,441 rows) --
+Output: `output/primary_yields.csv`. Columns as first built:
 `date, state, code, price, coupon, yield_measure_used, yield,
 current_yield, bucket, series_label, excluded_near_maturity,
-excluded_past_maturity`. `series_label` is `"primary"` for all rows;
-the canal/robustness comparison (S-1750/S-1820/S-1950 etc.) has not been
-built yet -- separate follow-up script.
+excluded_past_maturity` (12 columns; a 13th, `active_default_override`,
+was added later -- see the Active-Default YTM Override section below).
+`series_label` is `"primary"` for all rows; the canal/robustness
+comparison (S-1750/S-1820/S-1950 etc.) has not been built yet -- separate
+follow-up script.
+
+**Row count -- 3,711 (verified 2026-09-02, `wc -l` minus header /
+`len(pd.read_csv(...))`).** This section originally said "3,441 rows,"
+which was correct *at the time it was written*, when `BOND_SPECS` held 12
+codes (PA: S-2240/S-2250/S-2270; Ohio: S-2100/S-2110/S-2080/S-2010;
+Alabama: S-0030/S-0040; Indiana: S-0510/S-0540; New York: S-1650). The
+later "PA Full Bond Re-Scan" (commit `5519087` "pa bridge") added two
+Pennsylvania codes to `BOND_SPECS` -- **S-2330 (93 rows) and S-2410 (177
+rows), +270 rows total** -- and this one sentence was never updated to
+match. 3,441 + 270 = 3,711 exactly; confirmed by grouping the current
+CSV by code (`total minus S-2330 and S-2410 = 3,441`). This was not a
+data-quality problem, a copy-paste error, or a broken pipeline -- it was
+a stale descriptive figure left behind by a later, separately-documented
+expansion of the bond set. Every downstream number that draws on this
+file has been re-verified against the 3,711-row version and is correct.
+`output/primary_yields_before_default_override.csv` has the same 3,711
+rows (the override changed yield *values* on 221 rows, not the row
+count).
 
 ## Active-Default YTM Override (post-chart-review finding)
 
@@ -1932,6 +1959,13 @@ mismatches are listed below for review, not fixed in place.
    drawn from the file checked out correctly) -- looks like simple
    staleness in one descriptive sentence after later additions grew the
    file, not a broken pipeline.
+   **RESOLVED 2026-09-02:** root cause pinned and the sentence corrected
+   in place. The +270 rows are exactly S-2330 (93) + S-2410 (177), added
+   to `BOND_SPECS` by commit `5519087` ("pa bridge") during the PA Full
+   Bond Re-Scan; 3,441 + 270 = 3,711. The "calculate_yields.py (built)"
+   section now carries the verified 3,711 figure with this explanation,
+   and `output/FACTS_LAB_REPORT.md` uses 3,711 throughout. No two
+   different counts remain on record.
 2. The Alabama-vs-Ohio yearly table's 1843 row (7.36%/7.15%) doesn't
    reproduce -- actual full-calendar-year recomputation gives 8.23%/8.18%.
    Every other row of that same table (1844-1848, 1850) reproduces
@@ -2200,9 +2234,14 @@ raised.
    The remaining task -- actually incorporating C-1260 into the protected
    comparison script and its outputs -- is still open. **Worth 15 minutes
    in a future pass, not advisor input.**
-4. **`primary_yields.csv`'s documented row count is stale** (says 3,441,
-   actually 3,711 -- harmless, no data-quality issue found, not yet
-   fixed since it wasn't in scope for the 2026-08-25 targeted-fix pass).
+4. **`primary_yields.csv` row count -- RESOLVED 2026-09-02.** Was
+   documented as 3,441 in the "calculate_yields.py (built)" section;
+   verified current count is **3,711**. Cause: the PA Full Bond Re-Scan
+   (commit `5519087`) added S-2330 (93 rows) + S-2410 (177 rows) = +270
+   rows to `BOND_SPECS` and the old sentence was never updated
+   (3,441 + 270 = 3,711, confirmed by per-code grouping). Not a data or
+   pipeline problem. The "(built)" section now states 3,711 with the full
+   explanation; `output/FACTS_LAB_REPORT.md` uses 3,711 throughout.
    The Alabama-vs-Ohio 1843 mismatch flagged alongside it is now
    **RESOLVED** -- root-caused and corrected in the table above (see
    "Alabama-vs-Ohio 1843 Discrepancy -- Root-Caused," 2026-08-25): the
@@ -2216,3 +2255,222 @@ Pittsburgh 2.65pp, now strengthened by C-1260's immediate-reaction data
 point) as the two headline results. Get a yes/no on Alabama and a quick
 read on the Indiana deferred-coupon question, and the meeting's technical
 agenda is complete -- everything else is ready for the paper as-is.
+
+## 2026-09-02: Post-Meeting Follow-Up -- Indiana Tranche Issuance Timing (advisor Task 1)
+
+Advisors asked for a more precise check of whether the five Indiana canal
+codes (S-0470 "Indiana Canal", S-0480 Deferred, S-0490 Preferred, S-0500
+Special Preferred, S-0506 Special Deferred) were all issued at one moment
+in the 1847 Butler restructuring or in stages. This is a follow-up
+subsection to the "2026-08-17: Canal/Robustness Comparison Script"
+section above.
+
+**1. Codebook has no issue-date field -- re-verified directly from the
+raw file, not from memory.** `Securities Index.xls` "final" sheet has
+exactly five columns: `Code | Name | Type | Interest rate | Maturity`.
+"Sheet1" adds only `sort | from index file | Unnamed: 2` (bookkeeping
+columns, all 0.0 for these codes). There is no issuance/authorizing-act
+date anywhere in the codebook for any security, so the codebook cannot
+answer the issuance-timing question at all. Maturity is blank for all
+five canal codes; interest rate is "5s" for four of them and blank for
+S-0470.
+
+**2. Market-data first-quote dates on the New York exchange (from
+`output/new_york_state_debt_prices.csv`, "Other State Debt" sheet) --
+staged, but this is a trading-visibility fact, not an issuance date:**
+
+| Code | Name | First NY quote | Last | n | Price range |
+|---|---|---|---|---|---|
+| S-0470 | Indiana Canal | 1850-01-19 | 1853-12-24 | 54 | 76.25-98.00 |
+| S-0490 | Indiana Canal Preferred 5s | 1850-04-24 | 1853-07-09 | 65 | 10.00-49.50 |
+| S-0500 | Indiana Canal Special Preferred 5s | 1850-09-18 | 1853-07-23 | 38 | 11.00-50.25 |
+| S-0480 | Indiana Canal Deferred 5s | 1850-09-21 | 1852-12-01 | 22 | 6.00-50.00 |
+| S-0506 | Indiana Canal Special Deferred 5s | 1851-01-01 | 1853-06-04 | 21 | 1.00-10.75 |
+
+All five first appear in this price source in 1850-51, roughly three
+years *after* the January 1847 supplemental act -- consistent with the
+already-documented fact that these tranches contribute nothing to the
+Feb/Apr 1843 policy-window test. The staggered first-quote order
+(generic "Indiana Canal" -> Preferred -> Special Preferred/Deferred ->
+Special Deferred) is real in the data but cannot be read as an issuance
+sequence: first appearance in the New York quotation lists reflects when
+a security became actively traded there, not when it was legally issued.
+
+**3. Legislative history (web research, same source tier as the earlier
+Butler Bill work -- Newcomer 1936 IMH, Indiana Historical Society
+finding aid M0758/OM0392, Indiana History Blog, Wallis).** Original
+Butler Bill passed January 1846; supplementary act "for the Funded debt
+of the State of Indiana, and for the completion of the Wabash and Erie
+Canal from Terre Haute to Evansville" approved January 27, 1847; Governor
+Whitcomb conveyed all canal property to the three-man trust July 31,
+1847. Sources describe old bonds being surrendered and "new bonds issued
+to the holders" but give **no staged-rollout timeline** and **do not use
+the words "preferred," "deferred," or "special" anywhere** -- confirmed
+by re-querying Newcomer's text directly for those terms. As already
+recorded in the 2026-08-17 verification-pass note, the codebook's tranche
+names almost certainly reflect how these securities were labelled and
+traded on Wall Street, not the statute's own language. No period
+financial reference defining the four instrument names was located this
+pass either.
+
+**4. Is there an "anchor"/"original" bond among the five?** No codebook
+entry is labelled "original." The pre-restructuring general-obligation
+loan is a *separate* pair of codes -- S-0510/S-0540 ("Indiana
+Dollar/Sterling 5s, 25 years"), already in the primary series. Among the
+five canal codes, **S-0470 "Indiana Canal" is the odd one out**: no
+coupon in the codebook, and it trades at 76-98 in 1850-53, far above the
+four 5s tranches (which trade 1-50). Best inference (labelled as
+inference, not confirmed): S-0470 is either a generic/aggregate
+quotation or the surviving state-obligation portion of the settlement
+(the half of the debt the state kept and resumed servicing as Indiana's
+finances stabilised in the early 1850s), while S-0480/S-0490/S-0500/
+S-0506 are the canal-revenue-dependent claims that stayed distressed
+because canal toll revenue never materialised. S-0470 is already
+excluded from the yield comparison (no coupon to compute from).
+
+**Verdict: UNCLEAR / not resolvable from available records.** Same-date
+1847 issuance can be neither confirmed nor refuted. The codebook is
+silent on issue dates; the legislative-history sources describe a single
+1846-47 settlement but give no rollout detail and never use the tranche
+names; the staggered 1850-51 market appearance is a genuine data pattern
+but is a trading-visibility fact, not an issuance date. Treated the same
+way as the deferred-coupon question -- left as a live item for advisor
+knowledge rather than forced.
+
+## 2026-09-02: Post-Meeting Follow-Up -- Indiana Tranche Payment Mechanics (advisor Task 1b)
+
+Hall's live follow-up ("who gets paid first, second") was about payment
+mechanics, not issuance timing. Plain-English answer, for quotable use:
+
+**Priority mapping (five codes):**
+- **S-0490 "Indiana Canal Preferred 5s" and S-0500 "Indiana Canal
+  Special Preferred 5s" -- PREFERRED. First claim on canal toll
+  revenue.** (S-0500 "Special Preferred" trades consistently lower than
+  plain S-0490 -- median price ~$20 vs ~$42 -- so within the preferred
+  bucket there is a further sub-ordering; the pooled "preferred" average
+  blends the two.)
+- **S-0480 "Indiana Canal Deferred 5s" and S-0506 "Indiana Canal Special
+  Deferred 5s" -- DEFERRED. Paid only after the preferred claims in any
+  given period; S-0506 "Special Deferred" is the most junior of all
+  (median price ~$9, and one 1851 print at $1.00).**
+- **S-0470 "Indiana Canal" -- does NOT fit cleanly into either bucket.**
+  It is a distinct, higher-grade instrument (no 5% coupon in the
+  codebook; trades 76-98 while every tranche trades below 51). Most
+  likely the state-obligation half of the settlement, not a canal-revenue
+  tranche. Do not present it as "preferred" or "deferred."
+
+**The dividing rule (preferred fully paid before deferred, or a
+proportional split)?** The historical record checked does not state this
+explicitly. Newcomer (1936, IMH, p. 110) confirms the *state-vs-canal*
+split precisely -- "the principal and half the interest of these new
+securities were to be paid by the state and the other half of the
+interest was to be paid by the revenues of the canal" -- and confirms
+the canal-revenue portion was genuinely contingent, not guaranteed
+(p. 113: bondholders "saw their security steadily shrinking" as railroads
+diverted traffic). But no source located this pass, or in the earlier
+serious attempt (see 2026-08-17 verification pass), specifies whether
+*preferred* holders had to be made whole before *deferred* holders
+received anything, versus a fixed pro-rata division. Standard
+19th-century "preferred"/"deferred" security mechanics would be strict
+priority (senior satisfied in full first), same logic as modern
+senior/subordinated debt -- but canal-revenue bonds are not guaranteed
+to follow that convention, and this cannot be asserted from the sources.
+
+**What the price data implies about the mechanism:** deferred bonds
+traded at positive but deeply distressed prices throughout 1850-53 --
+S-0480 mostly $6-15 (one $50 first print flagged as a likely data
+anomaly), S-0506 $1-10.75. They were *not* priced at zero. So the market
+expected deferred holders to receive *something* eventually (residual
+value, or a share of proceeds if the canal were sold or reclaimed by the
+state), i.e. not a total wipeout -- which argues against the strictest
+reading ("deferred gets nothing until preferred is 100% satisfied, and
+revenue never gets there"). At the same time preferred itself only
+traded $20-50 (also well below par), so even the senior tranche was not
+expected to be made whole. The overall picture the prices paint is a
+strict-ish priority ordering in which *both* classes were impaired and
+the deferred class was a highly subordinated residual claim -- but the
+exact contractual rule (waterfall vs. pro-rata) remains an open
+institutional-detail question for the advisors, alongside the
+deferred-coupon question already on the agenda. **None of this changes
+the 40.04pp price/yield gap finding, which is about the observed spread,
+not the contractual mechanism.**
+
+## 2026-09-02: City Default Mechanics -- Why the City Itself Stayed Solvent (advisor Task 2)
+
+Distinct question from the market-pricing work already in this file. The
+existing Philadelphia/Pittsburgh comparisons show the *bond market* did
+not raise the city's borrowing cost when Pennsylvania defaulted (the
+"no-spillover" finding). This section addresses the separate,
+mechanical/legal question: why did the city of Philadelphia *itself* not
+default, when the Commonwealth did? **Keep the two claims separate in the
+paper -- "investors did not punish the city" (established, price-based)
+vs. "the city stayed solvent because its finances were legally and
+structurally separate from the state's" (this section, historical).**
+
+**1. City and state finances were legally separate.** In 1840s
+Pennsylvania, the city of Philadelphia and the ring of surrounding
+districts (Northern Liberties, Southwark, Spring Garden, Kensington,
+etc.) were each separate municipal corporations, each -- per the
+Encyclopedia of Greater Philadelphia's Consolidation-Act essay -- holding
+its own "powers to tax, borrow, and spend, and thus remained independent
+of Philadelphia City's control," and all of them subordinate creations
+of "the Commonwealth[,] which then, as now, held the power to create,
+alter, and destroy local government." A municipal corporation of this era
+is a distinct legal person with its own tax base and its own debt; the
+state is not a co-obligor on municipal debt and the municipality is not a
+co-obligor on state debt. This is a well-established general principle of
+19th-century American municipal law -- flagged as such rather than
+independently verified against an 1840s Pennsylvania statute or case in
+this pass (see limitations).
+
+**2. What Pennsylvania's state debt was for, and Philadelphia's
+non-involvement.** Pennsylvania's ~$40M debt by 1841 was overwhelmingly
+for the state-owned Main Line of Public Works (the Philadelphia-to-
+Pittsburgh canal-and-portage-railroad system, ~$18M+ in construction
+cost by 1834) plus other state canals and state investments in bank
+stock. This was Commonwealth debt, serviced (inadequately) by state
+canal tolls and state taxes. The city of Philadelphia was not a
+co-obligor or guarantor on any of it -- the Main Line was a state asset,
+not a municipal one. (Not independently re-verified against a bond
+prospectus this pass; based on the standard secondary accounts -- Wallis,
+Thomson, the Main Line histories.)
+
+**3. What Philadelphia's own debt was for.** The city and districts
+borrowed for genuinely municipal purposes with their own dedicated
+revenue: the Fairmount Water Works and its expansions (municipal water,
+sold to ratepayers), the Philadelphia Gas Works (from the 1830s,
+municipal gas, sold to ratepayers), wharves, public buildings, district
+street and drainage improvements, and -- from 1846 -- a large equity
+subscription to the Pennsylvania Railroad. C-1100 ("Philadelphia 5s, r.
+1846"), the bond used in this project's flagship city comparison, is a
+city loan trading continuously from 1835, i.e. pre-dating the PRR
+subscription. The city's revenue base -- municipal property tax plus
+utility (water/gas) receipts -- was local and was not hit by the
+collapse in *state* canal tolls and *state* tax shortfalls that drove
+Pennsylvania's default.
+
+**4. Direct historical statement?** Not located this pass. No contemporary
+source was found that explicitly says, in so many words, "Philadelphia's
+credit held while Pennsylvania's collapsed because X." The explanation
+above is assembled from the structural facts (separate corporations,
+separate revenue, no cross-guarantee) plus this project's own price
+evidence, not from a single source that states the conclusion directly.
+One adjacent, well-sourced fact: by the early 1850s the city proper had
+become "far more heavily indebted than its neighbors" specifically
+because of the PRR subscription -- so Philadelphia's credit was not
+untouchable, it just was never in default; that strain is post-window
+and railroad-driven, unrelated to the state's canal default.
+
+**Limitations / open items:**
+- The city/state legal-separation point rests on the general principle of
+  19th-c municipal-corporation law plus the Consolidation-Act secondary
+  essay, not an 1840s Pennsylvania statute or court case read directly.
+- Philadelphia's non-co-obligor status on the Main Line debt is taken
+  from standard secondary accounts, not from a state bond prospectus or
+  the loan acts themselves.
+- No single contemporary source stating the city-vs-state credit contrast
+  outright was found; the writeup is inference from structure + this
+  project's price data.
+- Pittsburgh: the same municipal-corporation logic applies by analogy
+  (Pennsylvania city, separate corporation), but was not researched
+  city-specifically this pass.
